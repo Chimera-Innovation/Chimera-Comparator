@@ -21,6 +21,7 @@ Run from the MVP folder:
 
 ```powershell
 python build_brush_mark_comparator.py
+python build_farmer_progression_output.py
 ```
 
 Expected dataset layout:
@@ -34,9 +35,23 @@ D:\NDVI-dataset\MVP - ndvi progression
 ## Primary Files
 
 - Comparator script: [build_brush_mark_comparator.py](build_brush_mark_comparator.py)
+- Farmer progression script: [build_farmer_progression_output.py](build_farmer_progression_output.py)
 - Audit CSV: [brush_mark_comparator/brush_mark_extraction_audit.csv](brush_mark_comparator/brush_mark_extraction_audit.csv)
 - Final report: [brush_mark_comparator/brush_mark_comparator_final_report.md](brush_mark_comparator/brush_mark_comparator_final_report.md)
+- Farmer-ready report: [farmer_progression_output/farmer_ready_report.md](farmer_progression_output/farmer_ready_report.md)
+- Farmer progression CSV: [farmer_progression_output/field_progression_summary.csv](farmer_progression_output/field_progression_summary.csv)
 - Artifact manifest: [deliverable_manifest.csv](deliverable_manifest.csv)
+
+## Farmer-Facing Progression Output
+
+The farmer-facing package converts the validated brush comparator masks into filled human-marked vigour-loss zones and operational summaries.
+
+| Field | Summary | Timeline | Trend Chart | Growth Map | Dashboard |
+| --- | --- | --- | --- | --- | --- |
+| Mallard-Avenue | [summary](farmer_progression_output/Mallard-Avenue/field_farmer_summary.md) | [timeline](farmer_progression_output/Mallard-Avenue/field_farmer_timeline.png) | [trend](farmer_progression_output/Mallard-Avenue/vigour_loss_percent_over_time.png) | [growth map](farmer_progression_output/Mallard-Avenue/field_concern_growth_map.png) | [dashboard](farmer_progression_output/Mallard-Avenue/field_farmer_dashboard.png) |
+| McIntyre-Road | [summary](farmer_progression_output/McIntyre-Road/field_farmer_summary.md) | [timeline](farmer_progression_output/McIntyre-Road/field_farmer_timeline.png) | [trend](farmer_progression_output/McIntyre-Road/vigour_loss_percent_over_time.png) | [growth map](farmer_progression_output/McIntyre-Road/field_concern_growth_map.png) | [dashboard](farmer_progression_output/McIntyre-Road/field_farmer_dashboard.png) |
+
+Farmer-facing wording uses human-observed concern, persistent low-vigour area, vigour-loss zone, and requires investigation. It does not diagnose disease.
 
 ## Visual Review
 

@@ -21,3 +21,24 @@ mask,McIntyre-Road,2026-05-08,brush_mark_comparator/McIntyre-Road/masks/McIntyre
 debug_panel,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/debug/McIntyre-Road_2026-05-27_brush_debug.png,Five-panel visual extraction review
 overlay,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/overlays/McIntyre-Road_2026-05-27_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
 mask,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/masks/McIntyre-Road_2026-05-27_brush_mask.png,Extracted brush mask
+script,,,build_farmer_progression_output.py,Builds farmer-facing progression metrics reports charts maps timelines and dashboards
+farmer_report,,,farmer_progression_output/farmer_ready_report.md,Farmer-ready operational progression report
+farmer_summary_csv,,,farmer_progression_output/field_progression_summary.csv,Per-field per-date human-marked vigour-loss coverage metrics
+farmer_summary,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/field_farmer_summary.md,Plain-language field summary
+season_story,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/field_season_story.md,Season narrative from human-observed concern progression
+farmer_timeline,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/field_farmer_timeline.png,Farmer timeline with raw NDVI background and human-marked regions
+growth_map,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/field_concern_growth_map.png,Concern growth map using first persistent and expanded human-marked zones
+trend_chart,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/vigour_loss_percent_over_time.png,Human-marked vigour-loss coverage trend
+farmer_dashboard,Mallard-Avenue,,farmer_progression_output/Mallard-Avenue/field_farmer_dashboard.png,Farmer-facing dashboard
+filled_mask,Mallard-Avenue,2026-05-12,farmer_progression_output/Mallard-Avenue/filled_masks/Mallard-Avenue_2026-05-12_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+filled_mask,Mallard-Avenue,2026-05-18,farmer_progression_output/Mallard-Avenue/filled_masks/Mallard-Avenue_2026-05-18_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+filled_mask,Mallard-Avenue,2026-05-22,farmer_progression_output/Mallard-Avenue/filled_masks/Mallard-Avenue_2026-05-22_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+filled_mask,Mallard-Avenue,2026-05-29,farmer_progression_output/Mallard-Avenue/filled_masks/Mallard-Avenue_2026-05-29_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+farmer_summary,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_farmer_summary.md,Plain-language field summary
+season_story,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_season_story.md,Season narrative from human-observed concern progression
+farmer_timeline,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_farmer_timeline.png,Farmer timeline with raw NDVI background and human-marked regions
+growth_map,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_concern_growth_map.png,Concern growth map using first persistent and expanded human-marked zones
+trend_chart,McIntyre-Road,,farmer_progression_output/McIntyre-Road/vigour_loss_percent_over_time.png,Human-marked vigour-loss coverage trend
+farmer_dashboard,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_farmer_dashboard.png,Farmer-facing dashboard
+filled_mask,McIntyre-Road,2026-05-08,farmer_progression_output/McIntyre-Road/filled_masks/McIntyre-Road_2026-05-08_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+filled_mask,McIntyre-Road,2026-05-27,farmer_progression_output/McIntyre-Road/filled_masks/McIntyre-Road_2026-05-27_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks

@@ -1,0 +1,7 @@
+field_name,date,vigour_loss_percent,change_from_previous_date,new_zone_count,persistent_zone_count,expanded_zone_count,overall_trend,notes
+Mallard-Avenue,2026-05-12,16.57,,9,0,0,stable,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
+Mallard-Avenue,2026-05-18,13.11,-3.46,5,11,9,decreased,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
+Mallard-Avenue,2026-05-22,9.22,-3.89,7,10,10,decreased,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
+Mallard-Avenue,2026-05-29,25.34,+16.12,0,9,7,increased,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
+McIntyre-Road,2026-05-08,4.83,,19,0,0,stable,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
+McIntyre-Road,2026-05-27,18.11,+13.28,3,5,5,increased,Human-marked filled region recovered from brush comparator output. Raw NDVI used as background only.
