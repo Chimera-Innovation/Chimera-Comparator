@@ -1,0 +1,23 @@
+{
+  "input_path": "D:\\NDVI-dataset\\MVP - ndvi progression\\manual_annotation_template.csv",
+  "total_records": 6,
+  "completed_records": 0,
+  "incomplete_records": 6,
+  "missing_disease_score": 6,
+  "missing_ndvi_score": 6,
+  "missing_overall_progression_state": 6,
+  "missing_recommended_action": 6,
+  "missing_priority": 0,
+  "missing_confidence": 6,
+  "records_ready_for_level_3": 0,
+  "records_not_ready_for_level_3": 6,
+  "ready_record_ids": [],
+  "not_ready_record_ids": [
+    "Mallard_Avenue_2026_05_12",
+    "Mallard_Avenue_2026_05_18",
+    "Mallard_Avenue_2026_05_22",
+    "Mallard_Avenue_2026_05_29",
+    "McIntyre_Road_2026_05_08",
+    "McIntyre_Road_2026_05_27"
+  ]
+}

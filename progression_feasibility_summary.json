@@ -1,0 +1,59 @@
+{
+  "dataset_path": "D:\\NDVI-dataset",
+  "dates_detected": [
+    "2026-05-08",
+    "2026-05-12",
+    "2026-05-18",
+    "2026-05-22",
+    "2026-05-27",
+    "2026-05-29"
+  ],
+  "total_dates": 6,
+  "total_images": 12,
+  "rgb_images": 0,
+  "ndvi_images": 6,
+  "geotiffs": 1,
+  "annotation_files": 6,
+  "field_context_files": [],
+  "fields_detected": [
+    "Mallard-Avenue",
+    "McIntyre-Road"
+  ],
+  "plots_detected": [],
+  "rows_detected": [],
+  "rgb_ndvi_match_rate": null,
+  "image_annotation_match_rate": 1.0,
+  "image_context_match_rate": 0.0,
+  "timeline_continuity": {
+    "units_with_1_date": 0,
+    "units_with_2_dates": 1,
+    "units_with_3_dates": 0,
+    "units_with_4_or_more_dates": 1
+  },
+  "best_current_feasibility_level": 2,
+  "what_can_be_done_now": [
+    "Whole-field NDVI timeline by field/date for Mallard-Avenue and McIntyre-Road.",
+    "Manual worsening/stable/improving review using the human-annotated NDVI overlays.",
+    "Simple field-level progression report for farmer or partner demos.",
+    "Prototype grid-cell or coarse-zone registration experiment on Mallard-Avenue only."
+  ],
+  "what_cannot_be_done_yet": [
+    "Reliable disease-specific progression model training.",
+    "Row-level or plant-level progression tracking.",
+    "RGB+NDVI fusion progression modeling, because no RGB timeline exists in this dataset.",
+    "Severity-calibrated supervised learning, because annotations are raster overlays without structured labels.",
+    "Predictive disease progression or treatment response modeling, because there are no treatment/weather/outcome logs."
+  ],
+  "minimum_annotation_needed": [
+    "Convert at least 15 repeatable zones or row sets across 3 Mallard dates into machine-readable polygons with stable zone IDs.",
+    "Assign a 0-5 disease/stress severity score to those same zones on each date.",
+    "Add the same annotation scheme to at least 10 zones across the 2 McIntyre dates."
+  ],
+  "recommended_next_step": "build manual annotation template",
+  "warnings": [
+    "Dataset contains NDVI-derived imagery only; no RGB progression imagery was found.",
+    "Only 1 georeferenced GeoTIFF was found in the dataset scan; most dates are PNG/JPG exports.",
+    "Human annotations are embedded in raster images and are not machine-readable.",
+    "No field context, treatment logs, disease notes, or severity tables were found."
+  ]
+}
