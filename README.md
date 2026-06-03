@@ -4,6 +4,8 @@ Brush-mark comparator MVP for transferring human Paint-marked annotations from N
 
 Current usable output:
 
+- `FINAL_DELIVERABLE.md`
+- `deliverable_manifest.csv`
 - `build_brush_mark_comparator.py`
 - `brush_mark_comparator/`
 

@@ -1,0 +1,23 @@
+artifact_type,field_name,date,path,purpose
+script,,,build_brush_mark_comparator.py,Rebuilds brush-mark comparator outputs from raw-vs-annotated image comparison
+report,,,brush_mark_comparator/brush_mark_comparator_final_report.md,Final extraction status report
+audit_csv,,,brush_mark_comparator/brush_mark_extraction_audit.csv,Per-date extraction metrics and status
+final_index,,,FINAL_DELIVERABLE.md,Human-readable final deliverable index and review checklist
+debug_panel,Mallard-Avenue,2026-05-12,brush_mark_comparator/Mallard-Avenue/debug/Mallard-Avenue_2026-05-12_brush_debug.png,Five-panel visual extraction review
+overlay,Mallard-Avenue,2026-05-12,brush_mark_comparator/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-12_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,Mallard-Avenue,2026-05-12,brush_mark_comparator/Mallard-Avenue/masks/Mallard-Avenue_2026-05-12_brush_mask.png,Extracted brush mask
+debug_panel,Mallard-Avenue,2026-05-18,brush_mark_comparator/Mallard-Avenue/debug/Mallard-Avenue_2026-05-18_brush_debug.png,Five-panel visual extraction review
+overlay,Mallard-Avenue,2026-05-18,brush_mark_comparator/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-18_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,Mallard-Avenue,2026-05-18,brush_mark_comparator/Mallard-Avenue/masks/Mallard-Avenue_2026-05-18_brush_mask.png,Extracted brush mask
+debug_panel,Mallard-Avenue,2026-05-22,brush_mark_comparator/Mallard-Avenue/debug/Mallard-Avenue_2026-05-22_brush_debug.png,Five-panel visual extraction review
+overlay,Mallard-Avenue,2026-05-22,brush_mark_comparator/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-22_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,Mallard-Avenue,2026-05-22,brush_mark_comparator/Mallard-Avenue/masks/Mallard-Avenue_2026-05-22_brush_mask.png,Extracted brush mask
+debug_panel,Mallard-Avenue,2026-05-29,brush_mark_comparator/Mallard-Avenue/debug/Mallard-Avenue_2026-05-29_brush_debug.png,Five-panel visual extraction review
+overlay,Mallard-Avenue,2026-05-29,brush_mark_comparator/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-29_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,Mallard-Avenue,2026-05-29,brush_mark_comparator/Mallard-Avenue/masks/Mallard-Avenue_2026-05-29_brush_mask.png,Extracted brush mask
+debug_panel,McIntyre-Road,2026-05-08,brush_mark_comparator/McIntyre-Road/debug/McIntyre-Road_2026-05-08_brush_debug.png,Five-panel visual extraction review
+overlay,McIntyre-Road,2026-05-08,brush_mark_comparator/McIntyre-Road/overlays/McIntyre-Road_2026-05-08_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,McIntyre-Road,2026-05-08,brush_mark_comparator/McIntyre-Road/masks/McIntyre-Road_2026-05-08_brush_mask.png,Extracted brush mask
+debug_panel,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/debug/McIntyre-Road_2026-05-27_brush_debug.png,Five-panel visual extraction review
+overlay,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/overlays/McIntyre-Road_2026-05-27_raw_with_brush_marks.png,Raw NDVI with transferred brush marks
+mask,McIntyre-Road,2026-05-27,brush_mark_comparator/McIntyre-Road/masks/McIntyre-Road_2026-05-27_brush_mask.png,Extracted brush mask
