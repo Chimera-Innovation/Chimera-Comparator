@@ -1,0 +1,20 @@
+# Runtime and dependency artifacts
+node_modules/
+__pycache__/
+*.pyc
+
+# Raw/source datasets must not be committed from this MVP repo.
+raw-ndvi/
+human-Annotated-ndvi/
+
+# Older experimental/generated output folders kept locally for audit history.
+black_paint_marking_progression/
+human_annotation_progression/
+paint_marking_progression/
+progression_maps/
+raw_with_human_reference_annotations/
+path_fix_validation_output/
+path_fix_validation_output_windows/
+
+# Keep the usable brush comparator output staged explicitly.
+!brush_mark_comparator/
