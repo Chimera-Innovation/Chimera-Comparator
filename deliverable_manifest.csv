@@ -42,3 +42,36 @@ trend_chart,McIntyre-Road,,farmer_progression_output/McIntyre-Road/vigour_loss_p
 farmer_dashboard,McIntyre-Road,,farmer_progression_output/McIntyre-Road/field_farmer_dashboard.png,Farmer-facing dashboard
 filled_mask,McIntyre-Road,2026-05-08,farmer_progression_output/McIntyre-Road/filled_masks/McIntyre-Road_2026-05-08_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
 filled_mask,McIntyre-Road,2026-05-27,farmer_progression_output/McIntyre-Road/filled_masks/McIntyre-Road_2026-05-27_filled_human_marked_region_mask.png,Filled human-marked region mask recovered from brush marks
+script,,,build_june_bearing_vigour_report.py,Builds June-bearing strawberry vigour class report from red purple and light-green human annotations
+june_bearing_report,,,june_bearing_vigour_report/june_bearing_farmer_ready_report.md,Farmer-ready vigour class report with growth-stage context
+june_bearing_summary_csv,,,june_bearing_vigour_report/vigour_class_summary.csv,Per-date low medium high vigour percentages from human annotations
+june_bearing_field_report,Mallard-Avenue,,june_bearing_vigour_report/Mallard-Avenue/june_bearing_field_report.md,Field-level June-bearing vigour class report
+june_bearing_timeline,Mallard-Avenue,,june_bearing_vigour_report/Mallard-Avenue/june_bearing_vigour_timeline.png,Vigour class timeline by filename date and growth stage
+june_bearing_chart,Mallard-Avenue,,june_bearing_vigour_report/Mallard-Avenue/vigour_class_percent_over_time.png,Stacked low medium high vigour percentage chart
+june_bearing_dashboard,Mallard-Avenue,,june_bearing_vigour_report/Mallard-Avenue/june_bearing_farmer_dashboard.png,Farmer-facing June-bearing vigour dashboard
+june_bearing_overlay,Mallard-Avenue,2026-05-12,june_bearing_vigour_report/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-12_human_vigour_class_overlay.png,Raw NDVI background with human vigour class regions
+june_bearing_overlay,Mallard-Avenue,2026-05-18,june_bearing_vigour_report/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-18_human_vigour_class_overlay.png,Raw NDVI background with human vigour class regions
+june_bearing_overlay,Mallard-Avenue,2026-05-22,june_bearing_vigour_report/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-22_human_vigour_class_overlay.png,Raw NDVI background with human vigour class regions
+june_bearing_overlay,Mallard-Avenue,2026-05-29,june_bearing_vigour_report/Mallard-Avenue/overlays/Mallard-Avenue_2026-05-29_human_vigour_class_overlay.png,Raw NDVI background with human vigour class regions
+june_bearing_field_report,McIntyre-Road,,june_bearing_vigour_report/McIntyre-Road/june_bearing_field_report.md,Field-level June-bearing vigour class report
+june_bearing_timeline,McIntyre-Road,,june_bearing_vigour_report/McIntyre-Road/june_bearing_vigour_timeline.png,Vigour class timeline by filename date and growth stage
+june_bearing_chart,McIntyre-Road,,june_bearing_vigour_report/McIntyre-Road/vigour_class_percent_over_time.png,Stacked low medium high vigour percentage chart
+june_bearing_dashboard,McIntyre-Road,,june_bearing_vigour_report/McIntyre-Road/june_bearing_farmer_dashboard.png,Farmer-facing June-bearing vigour dashboard
+june_bearing_overlay,McIntyre-Road,2026-05-27,june_bearing_vigour_report/McIntyre-Road/overlays/McIntyre-Road_2026-05-27_human_vigour_class_overlay.png,Raw NDVI background with human vigour class regions
+polygon_project,,,strawberry_vigour_polygon_report/README.md,Standalone strawberry vigour polygon report implementation
+polygon_project_validation,,,strawberry_vigour_polygon_report/VALIDATION_REPORT.md,Compile and run validation notes for the final bed-aware pipeline
+polygon_project_main,,,strawberry_vigour_polygon_report/src/main.py,CLI entrypoint for polygon report pipeline
+polygon_project_matching,,,strawberry_vigour_polygon_report/src/image_matching.py,Raw and annotated image matching by date
+polygon_project_parser,,,strawberry_vigour_polygon_report/src/annotation_parser.py,Annotation-only color classification morphology polygon extraction and green/visual NDVI context metrics
+polygon_project_bed_detection,,,strawberry_vigour_polygon_report/src/bed_detection.py,Stable bed navigation detection and bottom-to-top polygon-to-bed assignment
+polygon_project_export,,,strawberry_vigour_polygon_report/src/polygon_export.py,GeoJSON and CSV export utilities
+polygon_project_report,,,strawberry_vigour_polygon_report/src/report_generator.py,PNG overlay chart and HTML farmer report generator
+polygon_project_growth,,,strawberry_vigour_polygon_report/src/growth_stage.py,June-bearing strawberry growth-stage mapping by date
+polygon_project_requirements,,,strawberry_vigour_polygon_report/requirements.txt,Python dependencies for the standalone polygon pipeline
+polygon_output_geojson,Strawberry 1,2026-05-29,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\polygons\strawberry_1_may29_vigour_polygons.geojson,Validated bed-aware polygon GeoJSON for latest date
+polygon_output_summary,Strawberry 1,,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\summaries\strawberry_1_vigour_polygon_summary.csv,Validated polygon-level class and bed assignment summary
+polygon_output_bed_summary,Strawberry 1,,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\summaries\strawberry_1_bed_vigour_summary.csv,Validated bed-level vigour class and scout-focus summary
+polygon_output_overlay,Strawberry 1,2026-05-29,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\overlays\strawberry_1_may29_vigour_polygon_overlay.png,Validated raw NDVI background with human annotation polygons and bed IDs
+polygon_output_priority_map,Strawberry 1,2026-05-29,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\reports\strawberry_1_latest_priority_map.png,Validated latest raw-image priority map with top-five bed labels
+polygon_output_html,Strawberry 1,,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\reports\strawberry_1_vigour_polygon_report.html,Validated customer-facing Field Intelligence Summary
+polygon_output_customer_audit,Strawberry 1,,C:\Users\Chimera\Downloads\Strawberry 1 - vigour polygon report\reports\strawberry_1_customer_release_audit.md,Customer release audit for Field Intelligence Summary
