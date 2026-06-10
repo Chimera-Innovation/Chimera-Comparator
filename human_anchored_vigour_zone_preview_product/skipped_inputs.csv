@@ -1,0 +1,7 @@
+status,check,date,detail
+INFO,duplicate raw date,2026-05-12,Keeping C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-5-12-2026-orthophoto-NDVI.png; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\Mallard-Avenue-5-12-2026-orthophoto-NDVI.png
+INFO,duplicate raw date,2026-05-18,Keeping C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-5-18-2026-orthophoto-NDVI.tif; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\Mallard-Avenue-5-18-2026-orthophoto-NDVI.tif
+INFO,duplicate raw date,2026-05-22,Keeping C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-5-22-2026-orthophoto-NDVI.png; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\Mallard-Avenue-5-22-2026-orthophoto-NDVI.png
+INFO,duplicate raw date,2026-05-29,Keeping C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-5-29-2026-orthophoto-NDVI.png; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\Mallard-Avenue-5-29-2026-orthophoto-NDVI.png
+INFO,duplicate raw date,2026-05-27,Keeping C:\Users\Chimera\Downloads\Strawberry 1\McIntyre-Road-5-27-2026-orthophoto-NDVI.jpg; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\McIntyre-Road-5-27-2026-orthophoto-NDVI.jpg
+INFO,duplicate raw date,2026-05-08,Keeping C:\Users\Chimera\Downloads\Strawberry 1\McIntyre-Road-5-8-2026-orthophoto-NDVI.png; skipping duplicate raw file D:\NDVI-dataset\raw-ndvi\Strawberry_1\McIntyre-Road-5-8-2026-orthophoto-NDVI.jpg

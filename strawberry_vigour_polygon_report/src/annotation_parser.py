@@ -61,6 +61,9 @@ class PolygonRecord:
     processed_width: int = 0
     processed_height: int = 0
     coordinate_space: str = "processed_image_pixels"
+    row_gap_rejection_score: float = 0.0
+    human_annotation_overlap_ratio: float = 0.0
+    human_annotation_influence_overlap_ratio: float = 0.0
 
 
 def get_annotation_mask(raw_bgr: np.ndarray, annotated_bgr: np.ndarray, diff_threshold: int = 25) -> np.ndarray:
@@ -81,7 +84,40 @@ def resize_annotated_to_raw(raw_bgr: np.ndarray, annotated_bgr: np.ndarray) -> t
 
 def class_masks_from_annotation(annotated_bgr: np.ndarray, annotation_mask: np.ndarray) -> dict[str, np.ndarray]:
     masks = raw_class_masks_from_annotation(annotated_bgr, annotation_mask)
-    return {name: clean_mask(mask.astype(np.uint8) * 255) for name, mask in masks.items()}
+    return {name: mask.astype(np.uint8) * 255 for name, mask in masks.items()}
+
+
+def human_annotation_colour_masks(
+    raw_bgr: np.ndarray,
+    annotated_bgr: np.ndarray,
+    annotation_mask: np.ndarray,
+) -> dict[str, np.ndarray]:
+    """Classify only user-added red/purple/light-green annotation pixels.
+
+    Raw NDVI colours can be red/green already, so the class colour must also be
+    a meaningful raw-to-annotated colour change in the expected channel
+    direction. This keeps raw canopy texture from becoming a vigour label.
+    """
+    diff = cv2.absdiff(raw_bgr, annotated_bgr)
+    diff_gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+    annotation_bool = annotation_mask > 0
+    changed = annotation_bool & (diff_gray >= 25)
+    annotated = annotated_bgr.astype(np.int32)
+
+    def near_paint_colour(rgb: tuple[int, int, int], max_distance: float) -> np.ndarray:
+        target_bgr = np.array((rgb[2], rgb[1], rgb[0]), dtype=np.int32)
+        distance = np.sqrt(((annotated - target_bgr) ** 2).sum(axis=2))
+        return (distance <= max_distance) & changed
+
+    red = near_paint_colour((230, 20, 34), 32.0)
+    purple = near_paint_colour((196, 180, 226), 36.0)
+    light_green = near_paint_colour((178, 224, 20), 32.0)
+
+    return {
+        "low_vigour": red,
+        "medium_vigour": purple,
+        "high_vigour": light_green,
+    }
 
 
 def raw_class_masks_from_annotation(annotated_bgr: np.ndarray, annotation_mask: np.ndarray) -> dict[str, np.ndarray]:
@@ -102,23 +138,11 @@ def raw_class_masks_from_annotation(annotated_bgr: np.ndarray, annotation_mask: 
 
 
 def clean_mask(mask: np.ndarray) -> np.ndarray:
-    open_kernel = np.ones((5, 5), np.uint8)
-    close_kernel = np.ones((7, 7), np.uint8)
-    cleaned = cv2.morphologyEx(mask, cv2.MORPH_OPEN, open_kernel)
-    cleaned = cv2.morphologyEx(cleaned, cv2.MORPH_CLOSE, close_kernel)
-    return fill_closed_regions(cleaned)
+    return (mask > 0).astype(np.uint8) * 255
 
 
 def fill_closed_regions(mask: np.ndarray) -> np.ndarray:
-    if not np.any(mask):
-        return mask
-    flood = mask.copy()
-    h, w = flood.shape[:2]
-    flood_mask = np.zeros((h + 2, w + 2), np.uint8)
-    cv2.floodFill(flood, flood_mask, (0, 0), 255)
-    holes = cv2.bitwise_not(flood)
-    filled = cv2.bitwise_or(mask, holes)
-    return filled
+    return (mask > 0).astype(np.uint8) * 255
 
 
 def masks_to_polygons(
