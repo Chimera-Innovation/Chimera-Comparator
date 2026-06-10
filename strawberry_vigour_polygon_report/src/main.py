@@ -16,7 +16,7 @@ from .annotation_parser import (
 from .growth_stage import growth_stage_for_date
 from .human_guided_polygons import HumanGuidedConfig, build_human_guided_polygons
 from .image_matching import match_image_pairs_with_audit
-from .polygon_export import date_slug, field_slug, write_bed_summary, write_geojson, write_polygon_summary, write_row_summary
+from .polygon_export import date_slug, field_slug, read_geojson_records, write_bed_summary, write_geojson, write_polygon_summary, write_row_summary
 from .report_generator import (
     build_audit_rows,
     draw_polygon_overlay,
@@ -34,6 +34,14 @@ LARGE_ANNOTATION_PERCENT = 35.0
 UNCLASSIFIED_CHANGED_PERCENT = 10.0
 
 
+def outputs_are_current(output_paths: list[Path], source_paths: list[Path]) -> bool:
+    if not output_paths or not all(path.exists() for path in output_paths):
+        return False
+    newest_source = max(path.stat().st_mtime for path in source_paths if path.exists())
+    oldest_output = min(path.stat().st_mtime for path in output_paths)
+    return oldest_output >= newest_source
+
+
 def field_foreground_mask(raw_bgr) -> object:
     gray = cv2.cvtColor(raw_bgr, cv2.COLOR_BGR2GRAY)
     foreground = (gray > 8) & (gray < 248)
@@ -42,6 +50,20 @@ def field_foreground_mask(raw_bgr) -> object:
     foreground_u8 = cv2.morphologyEx(foreground_u8, cv2.MORPH_CLOSE, kernel)
     foreground_u8 = cv2.morphologyEx(foreground_u8, cv2.MORPH_OPEN, kernel)
     return foreground_u8 > 0
+
+
+def resize_pair_for_processing(raw_bgr, annotated_bgr, max_dimension: int) -> tuple[object, object, float]:
+    if max_dimension <= 0:
+        return raw_bgr, annotated_bgr, 1.0
+    height, width = raw_bgr.shape[:2]
+    largest = max(height, width)
+    if largest <= max_dimension:
+        return raw_bgr, annotated_bgr, 1.0
+    scale = max_dimension / largest
+    new_size = (max(1, int(round(width * scale))), max(1, int(round(height * scale))))
+    raw_resized = cv2.resize(raw_bgr, new_size, interpolation=cv2.INTER_AREA)
+    annotated_resized = cv2.resize(annotated_bgr, new_size, interpolation=cv2.INTER_AREA)
+    return raw_resized, annotated_resized, scale
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,6 +85,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-human-overlap-ratio", default=0.01, type=float)
     parser.add_argument("--min-buffer-overlap-ratio", default=0.95, type=float)
     parser.add_argument("--field-area-m2", default=None, type=float)
+    parser.add_argument("--max-processing-dimension", default=3600, type=int)
+    parser.add_argument("--date", action="append", default=None, help="Optional YYYY-MM-DD date filter. Can be supplied more than once.")
+    parser.add_argument("--use-cache", default="true", choices=("true", "false"), help="Reuse current per-date outputs when source images have not changed.")
+    parser.add_argument("--force-reprocess", action="store_true", help="Ignore cached per-date outputs and rebuild all selected dates.")
     parser.add_argument("--ground-notes-csv", default=None, type=Path)
     parser.add_argument("--event-log-csv", default=None, type=Path)
     return parser.parse_args()
@@ -106,6 +132,10 @@ def main() -> None:
     )
 
     pairs, audit_rows = match_image_pairs_with_audit(args.raw_dir, args.annotated_dir)
+    if args.date:
+        requested_dates = set(args.date)
+        pairs = [pair for pair in pairs if pair.date in requested_dates]
+        print(f"[FILTER] Processing requested dates only: {', '.join(sorted(requested_dates))}")
     if not pairs:
         print("[WARN] No matched image pairs found. Nothing to process.")
         return
@@ -118,6 +148,7 @@ def main() -> None:
     raw_paths_by_date: dict[str, Path] = {}
     image_shapes_by_date: dict[str, tuple[int, int]] = {}
     global_row_count = args.row_count or args.bed_count
+    use_cache = args.use_cache.lower() == "true" and not args.force_reprocess
     if row_aware and global_row_count is None:
         detected_counts: list[int] = []
         for pair in pairs:
@@ -132,6 +163,38 @@ def main() -> None:
 
     for pair in pairs:
         print(f"[DATE] Processing {pair.date}")
+        geojson_name = f"{field_slug(args.field_name)}_{date_slug(pair.date)}_vigour_polygons.geojson"
+        geojson_path = output_paths["polygons"] / geojson_name
+        overlay_name = f"{field_slug(args.field_name)}_{date_slug(pair.date)}_vigour_polygon_overlay.png"
+        overlay_path = output_paths["overlays"] / overlay_name
+        audit_json_path = output_paths["debug"] / pair.date / "human_guided_audit.json"
+        if use_cache and outputs_are_current([geojson_path, overlay_path, audit_json_path], [pair.raw_path, pair.annotated_path]):
+            cached_records = sorted(read_geojson_records(geojson_path), key=lambda record: (record.class_id, record.polygon_id))
+            if cached_records:
+                print(f"[CACHE] Reusing current outputs for {pair.date}: {len(cached_records)} polygons.")
+                all_records.extend(cached_records)
+                records_by_date[pair.date].extend(cached_records)
+                overlay_paths_by_date[pair.date] = overlay_path
+                raw_paths_by_date[pair.date] = pair.raw_path
+                first_record = cached_records[0]
+                image_shapes_by_date[pair.date] = (int(first_record.processed_height), int(first_record.processed_width))
+                if row_aware:
+                    raw_for_rows = cv2.imread(str(pair.raw_path), cv2.IMREAD_COLOR)
+                    if raw_for_rows is not None and first_record.processed_width and first_record.processed_height:
+                        target_size = (int(first_record.processed_width), int(first_record.processed_height))
+                        current_size = (int(raw_for_rows.shape[1]), int(raw_for_rows.shape[0]))
+                        if current_size != target_size:
+                            raw_for_rows = cv2.resize(raw_for_rows, target_size, interpolation=cv2.INTER_AREA)
+                        row_regions, row_confidence = detect_rows(raw_for_rows, row_numbering, global_row_count)
+                    else:
+                        row_regions, row_confidence = [], 0.0
+                else:
+                    row_regions, row_confidence = [], 0.0
+                row_regions_by_date[pair.date] = row_regions
+                row_confidence_by_date[pair.date] = row_confidence
+                continue
+            print(f"[CACHE] Cache read produced no polygons for {pair.date}; rebuilding.")
+
         raw_bgr = cv2.imread(str(pair.raw_path), cv2.IMREAD_COLOR)
         annotated_bgr = cv2.imread(str(pair.annotated_path), cv2.IMREAD_COLOR)
         if raw_bgr is None:
@@ -140,7 +203,8 @@ def main() -> None:
         if annotated_bgr is None:
             print(f"[WARN] Could not read annotated image, skipping: {pair.annotated_path}")
             continue
-        image_shapes_by_date[pair.date] = (int(raw_bgr.shape[0]), int(raw_bgr.shape[1]))
+        original_height, original_width = int(raw_bgr.shape[0]), int(raw_bgr.shape[1])
+        image_shapes_by_date[pair.date] = (original_height, original_width)
 
         annotated_bgr, resized = resize_annotated_to_raw(raw_bgr, annotated_bgr)
         if resized:
@@ -151,6 +215,19 @@ def main() -> None:
                     "check": "resized image pair",
                     "date": pair.date,
                     "detail": "Annotated image dimensions differed from raw image and were resized before comparison.",
+                }
+            )
+        raw_bgr, annotated_bgr, processing_scale = resize_pair_for_processing(raw_bgr, annotated_bgr, args.max_processing_dimension)
+        processed_height, processed_width = int(raw_bgr.shape[0]), int(raw_bgr.shape[1])
+        image_shapes_by_date[pair.date] = (processed_height, processed_width)
+        if processing_scale != 1.0:
+            print(f"[WARN] Large image {pair.date}; processing at scale {processing_scale:.3f} to keep audit run tractable.")
+            audit_rows.append(
+                {
+                    "status": "REVIEW",
+                    "check": "large image downsampled for processing",
+                    "date": pair.date,
+                    "detail": f"Raw and annotated images were resized together by scale {processing_scale:.3f} before mask extraction.",
                 }
             )
 
@@ -208,6 +285,12 @@ def main() -> None:
             row_regions,
             guided_config,
             output_paths["debug"],
+            processing_scale=processing_scale,
+            original_width=original_width,
+            original_height=original_height,
+            processed_width=processed_width,
+            processed_height=processed_height,
+            coordinate_space="processed_image_pixels",
         )
         if not records:
             print(f"[WARN] No human-guided inspection polygons generated for {pair.date}; no polygons exported for this date.")
@@ -217,11 +300,8 @@ def main() -> None:
         all_records.extend(date_records)
         records_by_date[pair.date].extend(date_records)
 
-        geojson_name = f"{field_slug(args.field_name)}_{date_slug(pair.date)}_vigour_polygons.geojson"
-        write_geojson(date_records, output_paths["polygons"] / geojson_name)
+        write_geojson(date_records, geojson_path)
 
-        overlay_name = f"{field_slug(args.field_name)}_{date_slug(pair.date)}_vigour_polygon_overlay.png"
-        overlay_path = output_paths["overlays"] / overlay_name
         draw_polygon_overlay(raw_bgr, date_records, overlay_path, None)
         overlay_paths_by_date[pair.date] = overlay_path
         raw_paths_by_date[pair.date] = pair.raw_path
@@ -246,13 +326,30 @@ def main() -> None:
     if overlay_paths_by_date:
         latest_date = sorted(overlay_paths_by_date)[-1]
         latest_raw_path = raw_paths_by_date.get(latest_date)
+        latest_meta_record = records_by_date[latest_date][0] if records_by_date.get(latest_date) else None
         latest_raw_bgr = cv2.imread(str(latest_raw_path), cv2.IMREAD_COLOR) if latest_raw_path else None
         if latest_raw_bgr is not None:
+            if latest_meta_record is not None:
+                target_size = (int(latest_meta_record.processed_width), int(latest_meta_record.processed_height))
+                current_size = (int(latest_raw_bgr.shape[1]), int(latest_raw_bgr.shape[0]))
+                if all(value > 0 for value in target_size) and current_size != target_size:
+                    latest_raw_bgr = cv2.resize(latest_raw_bgr, target_size, interpolation=cv2.INTER_AREA)
             hero_path = args.output_dir / "priority_rows_overlay.png"
             latest_rows = row_regions_by_date.get(latest_date, [])
             latest_confidence = row_confidence_by_date.get(latest_date, 0.0)
             if latest_rows:
-                write_row_lines_geojson(latest_rows, args.output_dir / "row_lines.geojson", latest_date, str(latest_raw_path or ""))
+                write_row_lines_geojson(
+                    latest_rows,
+                    args.output_dir / "row_lines.geojson",
+                    latest_date,
+                    str(latest_raw_path or ""),
+                    processing_scale=float(latest_meta_record.processing_scale) if latest_meta_record else 1.0,
+                    original_width=int(latest_meta_record.original_width) if latest_meta_record else 0,
+                    original_height=int(latest_meta_record.original_height) if latest_meta_record else 0,
+                    processed_width=int(latest_meta_record.processed_width) if latest_meta_record else 0,
+                    processed_height=int(latest_meta_record.processed_height) if latest_meta_record else 0,
+                    coordinate_space=(latest_meta_record.coordinate_space if latest_meta_record else "processed_image_pixels"),
+                )
             priority_targets = top_priority_beds(all_records, latest_date, row_regions_by_date, row_confidence_by_date, image_shapes_by_date, limit=20)
             write_inspection_targets(
                 priority_targets,

@@ -215,6 +215,15 @@ def inspection_targets(
     shape = (max(1, int(round(max_y))), max(1, int(round(max_x))))
     latest_rows = (row_regions_by_date or {}).get(latest_date, [])
     latest_confidence = (row_confidence_by_date or {}).get(latest_date, 0.0)
+    latest_metadata_record = latest_records[0]
+    processing_metadata = {
+        "processing_scale": float(latest_metadata_record.processing_scale),
+        "original_width": int(latest_metadata_record.original_width),
+        "original_height": int(latest_metadata_record.original_height),
+        "processed_width": int(latest_metadata_record.processed_width),
+        "processed_height": int(latest_metadata_record.processed_height),
+        "coordinate_space": latest_metadata_record.coordinate_space,
+    }
     low_mask = records_to_mask(latest_records, shape, {"low_vigour"})
     medium_mask = records_to_mask(latest_records, shape, {"medium_vigour"})
     human_focus_mask = cv2.bitwise_or(low_mask, medium_mask)
@@ -315,6 +324,7 @@ def inspection_targets(
                     "production_relevance": True,
                     "row_confidence": latest_confidence,
                     "human_annotation_overlap": focus,
+                    **processing_metadata,
                 }
             )
 
@@ -382,7 +392,7 @@ def class_area(records: list[PolygonRecord], class_name: str) -> float:
 
 
 def class_percent(records: list[PolygonRecord], class_name: str, total_pixels: float) -> float:
-    return class_area(records, class_name) / max(1.0, total_pixels) * 100.0
+    return min(100.0, class_area(records, class_name) / max(1.0, total_pixels) * 100.0)
 
 
 def grouped_blocks(
@@ -778,9 +788,12 @@ def make_chart(records_by_date: dict[str, list[PolygonRecord]], output_path: Pat
     high = []
     for date in dates:
         coverage = class_coverage_from_polygons(records_by_date[date])
-        low.append(coverage["low_vigour"])
-        medium.append(coverage["medium_vigour"])
-        high.append(coverage["high_vigour"])
+        low_value = min(100.0, coverage["low_vigour"])
+        medium_value = min(100.0 - low_value, coverage["medium_vigour"])
+        high_value = min(100.0 - low_value - medium_value, coverage["high_vigour"])
+        low.append(low_value)
+        medium.append(medium_value)
+        high.append(high_value)
     x = np.arange(len(dates))
     plt.figure(figsize=(10, 5.5))
     plt.bar(x, low, label="Low vigour", color=CLASS_COLORS_HEX["low_vigour"])
@@ -804,7 +817,7 @@ def date_rows(records: list[PolygonRecord]) -> list[dict[str, Any]]:
     previous_focus: float | None = None
     for date in sorted(grouped):
         coverage = class_coverage_from_polygons(grouped[date])
-        focus = coverage["low_vigour"] + coverage["medium_vigour"]
+        focus = min(100.0, coverage["low_vigour"] + coverage["medium_vigour"])
         if previous_focus is None:
             trend = "Stable"
             arrow = "right"
@@ -854,9 +867,9 @@ def row_report_rows(records: list[PolygonRecord]) -> list[dict[str, Any]]:
     rows = []
     for (date, row_id), item in sorted(grouped.items()):
         area = max(1.0, float(item["area"]))
-        low = float(item["low"]) / area * 100
-        medium = float(item["medium"]) / area * 100
-        high = float(item["high"]) / area * 100
+        low = min(100.0, float(item["low"]) / area * 100)
+        medium = min(100.0, float(item["medium"]) / area * 100)
+        high = min(100.0, float(item["high"]) / area * 100)
         rows.append(
             {
                 "date": date,
@@ -867,11 +880,11 @@ def row_report_rows(records: list[PolygonRecord]) -> list[dict[str, Any]]:
                 "low_value": low,
                 "medium_value": medium,
                 "high_value": high,
-                "focus_value": low + medium,
+                "focus_value": min(100.0, low + medium),
                 "low": format_percent(low),
                 "medium": format_percent(medium),
                 "high": format_percent(high),
-                "focus": format_percent(low + medium),
+                "focus": format_percent(min(100.0, low + medium)),
             }
         )
     return rows
@@ -975,11 +988,18 @@ def field_audit_rows(records: list[PolygonRecord], audit_rows: list[dict[str, st
 def technical_summary(records: list[PolygonRecord], latest_date: str, row_confidence_by_date: dict[str, float] | None) -> dict[str, Any]:
     dates = sorted({record.date for record in records})
     latest_records = [record for record in records if record.date == latest_date]
+    latest_record = latest_records[0] if latest_records else None
     return {
         "record_count": len(records),
         "date_count": len(dates),
         "latest_polygon_count": len(latest_records),
         "row_confidence": (row_confidence_by_date or {}).get(latest_date, 0.0),
+        "processing_scale": float(latest_record.processing_scale) if latest_record else 1.0,
+        "original_width": int(latest_record.original_width) if latest_record else 0,
+        "original_height": int(latest_record.original_height) if latest_record else 0,
+        "processed_width": int(latest_record.processed_width) if latest_record else 0,
+        "processed_height": int(latest_record.processed_height) if latest_record else 0,
+        "coordinate_space": latest_record.coordinate_space if latest_record else "processed_image_pixels",
     }
 
 
@@ -1037,6 +1057,12 @@ def write_inspection_targets(targets: list[dict[str, Any]], geojson_path: Path, 
             "human_annotation_overlap": round(float(target.get("human_annotation_overlap", 0.0)), 2),
             "reason": target.get("reason", ""),
             "recommended_action": target.get("action", ""),
+            "processing_scale": float(target.get("processing_scale", 1.0)),
+            "original_width": int(target.get("original_width", 0)),
+            "original_height": int(target.get("original_height", 0)),
+            "processed_width": int(target.get("processed_width", 0)),
+            "processed_height": int(target.get("processed_height", 0)),
+            "coordinate_space": target.get("coordinate_space", "processed_image_pixels"),
         }
         features.append(
             {
@@ -1066,6 +1092,12 @@ def write_inspection_targets(targets: list[dict[str, Any]], geojson_path: Path, 
             "human_annotation_overlap",
             "reason",
             "recommended_action",
+            "processing_scale",
+            "original_width",
+            "original_height",
+            "processed_width",
+            "processed_height",
+            "coordinate_space",
         ]
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -1158,6 +1190,11 @@ def write_html_report(
     .snapshot img { width: 100%; height: 100%; max-height: 360px; object-fit: contain; display: block; }
     .map-card { background: #02070b; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
     .map-card img { display: block; width: 100%; max-height: 84vh; object-fit: contain; background: #02070b; }
+    .evidence-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+    .evidence-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .evidence-card img { width: 100%; aspect-ratio: 1.45; object-fit: contain; display: block; background: #02070b; }
+    .evidence-card div { padding: 13px 15px; }
+    .evidence-card strong { display: block; font-size: 17px; margin-bottom: 5px; }
     .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); gap: 16px; }
     .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; }
     .card.inspect-card { border-color: rgba(255,59,59,.75); box-shadow: inset 4px 0 0 var(--red); }
@@ -1238,6 +1275,30 @@ def write_html_report(
     </section>
 
     <section>
+      <h2>Latest Evidence Stack</h2>
+      <div class="evidence-grid">
+        {% if raw_latest_rel %}
+        <article class="evidence-card">
+          <img src="{{ raw_latest_rel }}" alt="Latest raw evidence image">
+          <div><strong>1. Raw Image</strong><span class="muted">Evidence/background layer only.</span></div>
+        </article>
+        {% endif %}
+        {% if vigour_latest_rel %}
+        <article class="evidence-card">
+          <img src="{{ vigour_latest_rel }}" alt="Latest vigour map">
+          <div><strong>2. Vigour Map</strong><span class="muted">Supporting field signal for review.</span></div>
+        </article>
+        {% endif %}
+        {% if polygon_latest_rel %}
+        <article class="evidence-card">
+          <img src="{{ polygon_latest_rel }}" alt="Latest inferred inspection polygons">
+          <div><strong>3. Inferred Polygons</strong><span class="muted">Human-guided inspection zones.</span></div>
+        </article>
+        {% endif %}
+      </div>
+    </section>
+
+    <section>
       <h2>Annotated Inspection Map</h2>
       <div class="map-card">
         {% if hero_rel %}<img src="{{ hero_rel }}" alt="Annotated inspection map">{% endif %}
@@ -1309,6 +1370,7 @@ def write_html_report(
         </div>
         <h3>Internal Row Guide Summary</h3>
         <p class="muted">Exact row labels are customer-visible only when row confidence is at least 0.90. Latest confidence: {{ "%.2f"|format(tech.row_confidence) }}.</p>
+        <p class="muted">Processing coordinate space: {{ tech.coordinate_space }}. Processing scale: {{ "%.4f"|format(tech.processing_scale) }}. Original image: {{ tech.original_width }} x {{ tech.original_height }} px. Processed image: {{ tech.processed_width }} x {{ tech.processed_height }} px.</p>
         <div class="table-wrap">
           <table>
             <tr><th>Date</th><th>Internal row guide</th><th>Low %</th><th>Medium %</th><th>High %</th><th>Scout focus %</th></tr>
@@ -1343,6 +1405,12 @@ def write_html_report(
     }
     hero_rel = Path(os.path.relpath(hero_image_path, output_path.parent)).as_posix() if hero_image_path else ""
     chart_rel = Path(os.path.relpath(chart_path, output_path.parent)).as_posix()
+    latest_debug_dir = output_path.parent / "debug" / latest_date
+    raw_latest = latest_debug_dir / "01_raw_image.png"
+    vigour_latest = latest_debug_dir / "02_vigour_map.png"
+    polygon_latest_rel = overlays_rel.get(latest_date, "")
+    raw_latest_rel = Path(os.path.relpath(raw_latest, output_path.parent)).as_posix() if raw_latest.exists() else ""
+    vigour_latest_rel = Path(os.path.relpath(vigour_latest, output_path.parent)).as_posix() if vigour_latest.exists() else ""
     html = template.render(
         field_name=field_name,
         status=status,
@@ -1355,6 +1423,9 @@ def write_html_report(
         timeline=timeline,
         overlays=overlays_rel,
         hero_rel=hero_rel,
+        raw_latest_rel=raw_latest_rel,
+        vigour_latest_rel=vigour_latest_rel,
+        polygon_latest_rel=polygon_latest_rel,
         chart_rel=chart_rel,
         release_audit=release_audit,
         audit_rows=final_audit_rows,

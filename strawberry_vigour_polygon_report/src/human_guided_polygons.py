@@ -269,10 +269,20 @@ def build_human_guided_polygons(
     rows: list[RowRegion] | None = None,
     config: HumanGuidedConfig | None = None,
     debug_root: Path | None = None,
+    processing_scale: float = 1.0,
+    original_width: int = 0,
+    original_height: int = 0,
+    processed_width: int = 0,
+    processed_height: int = 0,
+    coordinate_space: str = "processed_image_pixels",
 ) -> list[PolygonRecord]:
     config = config or HumanGuidedConfig()
     rows = rows or []
     shape = raw_bgr.shape[:2]
+    processed_height = int(processed_height or shape[0])
+    processed_width = int(processed_width or shape[1])
+    original_height = int(original_height or processed_height)
+    original_width = int(original_width or processed_width)
     field_mask = make_field_mask(raw_bgr)
     human_mask = build_human_mask(class_masks)
     if not np.any(human_mask):
@@ -401,6 +411,7 @@ def build_human_guided_polygons(
                 affected_rows = [value for value in (row_start, row_end) if value]
                 row_id = "human_guided_zone"
                 bed_area = total_pixels
+            row_overlap_percent = area / max(1.0, float(bed_area)) * 100.0
             active = contour_mask > 0
             low_overlap = float(np.count_nonzero(cv2.bitwise_and(contour_mask, low_mask)))
             medium_overlap = float(np.count_nonzero(cv2.bitwise_and(contour_mask, medium_mask)))
@@ -429,7 +440,7 @@ def build_human_guided_polygons(
                     area_pixels=area,
                     area_percent=area / total_pixels * 100.0,
                     bed_area_pixels=float(max(1.0, bed_area)),
-                    area_percent_within_bed=area / max(1.0, float(bed_area)) * 100.0,
+                    area_percent_within_bed=float(min(100.0, row_overlap_percent)),
                     scouting_priority="highest priority" if severity.startswith("high") else "monitor / secondary priority",
                     confidence_source="human_annotation_constrained_ndvi_support",
                     note="Generated only inside buffered human annotation influence. For scouting prioritization only.",
@@ -443,10 +454,26 @@ def build_human_guided_polygons(
                     affected_beds=[row_id],
                     vigour_loss_percent=float(min(100.0, vigour_loss_percent)),
                     source=["human_annotation", "ndvi_stress"],
+                    row_segment_start_m=None,
+                    row_segment_end_m=None,
+                    row_overlap_percent=float(min(100.0, row_overlap_percent)),
+                    review_status="needs_human_review",
+                    processing_scale=float(processing_scale),
+                    original_width=original_width,
+                    original_height=original_height,
+                    processed_width=processed_width,
+                    processed_height=processed_height,
+                    coordinate_space=coordinate_space,
                 )
             )
     audit = {
         "date": date,
+        "processing_scale": float(processing_scale),
+        "original_width": original_width,
+        "original_height": original_height,
+        "processed_width": processed_width,
+        "processed_height": processed_height,
+        "coordinate_space": coordinate_space,
         "component_count": component_count - 1,
         "accepted_components": sum(1 for row in component_rows if row["status"] == "accepted"),
         "rejected_components": sum(1 for row in component_rows if row["status"] == "rejected"),

@@ -424,7 +424,18 @@ def rows_for_span(row_start: int, row_end: int, rows: list[RowRegion]) -> list[R
     return [row for row in rows if row_start <= row.row_number <= row_end]
 
 
-def write_row_lines_geojson(rows: list[RowRegion], output_path: Path, date: str = "", source_image: str = "") -> None:
+def write_row_lines_geojson(
+    rows: list[RowRegion],
+    output_path: Path,
+    date: str = "",
+    source_image: str = "",
+    processing_scale: float = 1.0,
+    original_width: int = 0,
+    original_height: int = 0,
+    processed_width: int = 0,
+    processed_height: int = 0,
+    coordinate_space: str = "processed_image_pixels",
+) -> None:
     features = []
     for row in rows:
         coords = [[int(x), int(y)] for x, y in (row.points or ((row.x_min, int(row.center_y)), (row.x_max, int(row.center_y))))]
@@ -438,6 +449,12 @@ def write_row_lines_geojson(rows: list[RowRegion], output_path: Path, date: str 
                     "source": row.source,
                     "date": date,
                     "source_image": source_image,
+                    "processing_scale": float(processing_scale),
+                    "original_width": int(original_width),
+                    "original_height": int(original_height),
+                    "processed_width": int(processed_width),
+                    "processed_height": int(processed_height),
+                    "coordinate_space": coordinate_space,
                     "customer_display": row.confidence >= 0.9,
                 },
                 "geometry": {"type": "LineString", "coordinates": coords},

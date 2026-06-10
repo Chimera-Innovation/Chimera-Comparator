@@ -20,6 +20,94 @@ def field_slug(field_name: str) -> str:
     return field_name.lower().replace(" ", "_").replace("-", "_")
 
 
+def processing_metadata(record: PolygonRecord) -> dict[str, int | float | str]:
+    return {
+        "processing_scale": float(record.processing_scale),
+        "original_width": int(record.original_width),
+        "original_height": int(record.original_height),
+        "processed_width": int(record.processed_width),
+        "processed_height": int(record.processed_height),
+        "coordinate_space": record.coordinate_space,
+    }
+
+
+def _as_float(value: object, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_int(value: object, default: int = 0) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _as_list(value: object) -> list:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        return [part.strip() for part in value.split(",") if part.strip()]
+    return []
+
+
+def read_geojson_records(input_path: Path) -> list[PolygonRecord]:
+    data = json.loads(input_path.read_text(encoding="utf-8"))
+    records: list[PolygonRecord] = []
+    for index, feature in enumerate(data.get("features", []), start=1):
+        properties = feature.get("properties", {})
+        geometry = feature.get("geometry", {})
+        coordinates = geometry.get("coordinates", [[]])[0]
+        coords = [[int(round(point[0])), int(round(point[1]))] for point in coordinates if len(point) >= 2]
+        if len(coords) < 3:
+            continue
+        records.append(
+            PolygonRecord(
+                field_name=str(properties.get("field_name", "")),
+                date=str(properties.get("date", "")),
+                growth_stage=str(properties.get("growth_stage", "")),
+                class_name=str(properties.get("class_name", "")),
+                class_id=_as_int(properties.get("class_id"), 0),
+                polygon_id=str(properties.get("polygon_id", f"P{index:03d}")),
+                bed_id=str(properties.get("bed_id", "")),
+                centroid_x=_as_float(properties.get("centroid_x")),
+                centroid_y=_as_float(properties.get("centroid_y")),
+                area_pixels=_as_float(properties.get("area_pixels")),
+                area_percent=_as_float(properties.get("area_percent")),
+                bed_area_pixels=_as_float(properties.get("bed_area_pixels"), 1.0),
+                area_percent_within_bed=min(100.0, _as_float(properties.get("area_percent_within_bed"))),
+                scouting_priority=str(properties.get("scouting_priority", "")),
+                confidence_source=str(properties.get("confidence_source", "")),
+                note=str(properties.get("note", "")),
+                mean_green_index=_as_float(properties.get("mean_green_index")),
+                mean_visual_ndvi_proxy=_as_float(properties.get("mean_visual_ndvi_proxy")),
+                coordinates=coords,
+                area_m2=None if properties.get("area_m2") is None else _as_float(properties.get("area_m2")),
+                severity=str(properties.get("severity", "")),
+                confidence=_as_float(properties.get("confidence")),
+                affected_rows=[_as_int(value) for value in _as_list(properties.get("affected_rows"))],
+                affected_beds=[str(value) for value in _as_list(properties.get("affected_beds"))],
+                vigour_loss_percent=min(100.0, _as_float(properties.get("vigour_loss_percent"))),
+                source=[str(value) for value in _as_list(properties.get("source"))],
+                row_segment_start_m=None if properties.get("row_segment_start_m") is None else _as_float(properties.get("row_segment_start_m")),
+                row_segment_end_m=None if properties.get("row_segment_end_m") is None else _as_float(properties.get("row_segment_end_m")),
+                row_overlap_percent=min(100.0, _as_float(properties.get("row_overlap_percent"))),
+                review_status=str(properties.get("review_status", "needs_human_review")),
+                processing_scale=_as_float(properties.get("processing_scale"), 1.0),
+                original_width=_as_int(properties.get("original_width")),
+                original_height=_as_int(properties.get("original_height")),
+                processed_width=_as_int(properties.get("processed_width")),
+                processed_height=_as_int(properties.get("processed_height")),
+                coordinate_space=str(properties.get("coordinate_space", "processed_image_pixels")),
+            )
+        )
+    return records
+
+
 def write_geojson(records: list[PolygonRecord], output_path: Path) -> None:
     features = []
     for record in records:
@@ -32,6 +120,7 @@ def write_geojson(records: list[PolygonRecord], output_path: Path) -> None:
                     "growth_stage": record.growth_stage,
                     "class_name": record.class_name,
                     "class_id": record.class_id,
+                    "polygon_id": record.polygon_id,
                     "bed_id": record.bed_id,
                     "centroid_x": record.centroid_x,
                     "centroid_y": record.centroid_y,
@@ -51,6 +140,11 @@ def write_geojson(records: list[PolygonRecord], output_path: Path) -> None:
                     "affected_beds": record.affected_beds or [],
                     "vigour_loss_percent": record.vigour_loss_percent,
                     "source": record.source or [],
+                    "row_segment_start_m": record.row_segment_start_m,
+                    "row_segment_end_m": record.row_segment_end_m,
+                    "row_overlap_percent": record.row_overlap_percent,
+                    "review_status": record.review_status,
+                    **processing_metadata(record),
                 },
                 "geometry": {
                     "type": "Polygon",
@@ -90,6 +184,11 @@ def write_polygon_summary(records: list[PolygonRecord], output_path: Path) -> No
             "affected_beds": ",".join(record.affected_beds or []),
             "vigour_loss_percent": round(record.vigour_loss_percent, 4),
             "source": ",".join(record.source or []),
+            "row_segment_start_m": "" if record.row_segment_start_m is None else round(record.row_segment_start_m, 4),
+            "row_segment_end_m": "" if record.row_segment_end_m is None else round(record.row_segment_end_m, 4),
+            "row_overlap_percent": round(record.row_overlap_percent, 4),
+            "review_status": record.review_status,
+            **processing_metadata(record),
         }
         for record in records
     ]
@@ -138,6 +237,7 @@ def write_bed_summary(
             key,
             {
                 "bed_area_pixels": record.bed_area_pixels,
+                **processing_metadata(record),
                 "low_vigour_area_pixels": 0.0,
                 "medium_vigour_area_pixels": 0.0,
                 "high_vigour_area_pixels": 0.0,
@@ -149,10 +249,10 @@ def write_bed_summary(
     previous_focus_by_bed: dict[str, float] = {}
     for (field_name, date, growth_stage, bed_id), item in sorted(grouped.items(), key=lambda pair: (pair[0][1], pair[0][3])):
         bed_area = max(1.0, float(item["bed_area_pixels"]))
-        low_pct = float(item["low_vigour_area_pixels"]) / bed_area * 100
-        medium_pct = float(item["medium_vigour_area_pixels"]) / bed_area * 100
-        high_pct = float(item["high_vigour_area_pixels"]) / bed_area * 100
-        focus = low_pct + medium_pct
+        low_pct = min(100.0, float(item["low_vigour_area_pixels"]) / bed_area * 100)
+        medium_pct = min(100.0, float(item["medium_vigour_area_pixels"]) / bed_area * 100)
+        high_pct = min(100.0, float(item["high_vigour_area_pixels"]) / bed_area * 100)
+        focus = min(100.0, low_pct + medium_pct)
         previous = previous_focus_by_bed.get(bed_id)
         if previous is None:
             change = ""
@@ -186,6 +286,12 @@ def write_bed_summary(
                 "scouting_priority": priority_from_focus(low_pct, medium_pct),
                 "ground_notes": notes_for(ground_notes, date, bed_id),
                 "event_notes": notes_for(event_notes, date, bed_id),
+                "processing_scale": item["processing_scale"],
+                "original_width": item["original_width"],
+                "original_height": item["original_height"],
+                "processed_width": item["processed_width"],
+                "processed_height": item["processed_height"],
+                "coordinate_space": item["coordinate_space"],
             }
         )
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -202,6 +308,7 @@ def write_row_summary(records: list[PolygonRecord], output_path: Path) -> None:
             {
                 "row_id": record.bed_id,
                 "row_area_pixels": record.bed_area_pixels,
+                **processing_metadata(record),
                 "low_vigour_overlap": 0.0,
                 "medium_vigour_overlap": 0.0,
                 "high_vigour_overlap": 0.0,
@@ -222,7 +329,7 @@ def write_row_summary(records: list[PolygonRecord], output_path: Path) -> None:
         low = float(item["low_vigour_overlap"])
         medium = float(item["medium_vigour_overlap"])
         high = float(item["high_vigour_overlap"])
-        focus_percent = (low + medium) / row_area * 100
+        focus_percent = min(100.0, (low + medium) / row_area * 100)
         previous_focus = previous_focus_by_row.get(row_id)
         if previous_focus is None:
             change = ""
@@ -245,6 +352,12 @@ def write_row_summary(records: list[PolygonRecord], output_path: Path) -> None:
                 "high_vigour_overlap": round(high, 2),
                 "scout_priority": priority_from_focus(low / row_area * 100, medium / row_area * 100),
                 "change_from_previous_flight": change,
+                "processing_scale": item["processing_scale"],
+                "original_width": item["original_width"],
+                "original_height": item["original_height"],
+                "processed_width": item["processed_width"],
+                "processed_height": item["processed_height"],
+                "coordinate_space": item["coordinate_space"],
             }
         )
     output_path.parent.mkdir(parents=True, exist_ok=True)

@@ -55,6 +55,12 @@ class PolygonRecord:
     row_segment_end_m: float | None = None
     row_overlap_percent: float = 0.0
     review_status: str = "needs_human_review"
+    processing_scale: float = 1.0
+    original_width: int = 0
+    original_height: int = 0
+    processed_width: int = 0
+    processed_height: int = 0
+    coordinate_space: str = "processed_image_pixels"
 
 
 def get_annotation_mask(raw_bgr: np.ndarray, annotated_bgr: np.ndarray, diff_threshold: int = 25) -> np.ndarray:
