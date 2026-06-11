@@ -79,6 +79,11 @@ input[type="range"] { width: 100%; }
   color: #f0c36a !important;
   line-height: 1.35;
 }
+.annotation-note {
+  color: #f0c36a !important;
+  font-size: 12px;
+  line-height: 1.35;
+}
 .metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;

@@ -12,6 +12,7 @@ GROWTH_STAGE_BY_MM_DD = {
     "05-22": "Fruit sizing / early ripening",
     "05-27": "Ripening / early harvest window",
     "05-29": "Harvest-time ripening",
+    "06-04": "Late harvest / post-harvest review",
 }
 
 
@@ -26,6 +27,7 @@ GROWTH_STAGE_NOTES = {
     "Fruit sizing / early ripening": "The crop is approaching ripening; expanding or persistent zones should be reviewed before harvest pressure peaks.",
     "Ripening / early harvest window": "Harvest-time scouting should focus on repeated low and medium zones while separating field-edge effects from production rows.",
     "Harvest-time ripening": "Late-season class maps support harvest review and next-season scouting priorities.",
+    "Late harvest / post-harvest review": "Late-season review should focus on persistence, recovery, and expansion of marked concern areas.",
 }
 
 

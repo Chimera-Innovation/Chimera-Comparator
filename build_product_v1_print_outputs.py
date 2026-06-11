@@ -13,7 +13,15 @@ ROOT = Path(__file__).resolve().parent
 PRODUCT_DIR = ROOT / "human_anchored_vigour_zone_preview_product"
 OUTPUT_DIR = ROOT / "daily_outputs"
 FIELD_NAME = "Strawberry 1"
-DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29"]
+DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29", "2026-06-04"]
+EXTRA_SUMMARY = {
+    "2026-06-04": {
+        "raw_path": r"C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-6-4-2026-orthophoto-NDVI.png",
+        "annotated_path": "",
+        "polygon_path": r"C:\Users\Chimera\Downloads\strawberry1-annotation-polygon\Mallard-Avenue-6-4-2026-orthophoto-NDVI-polygon.png",
+        "status": "REVIEW",
+    }
+}
 STATUS_COLORS = {
     "Stable": (70, 160, 85),
     "Monitor": (0, 170, 255),
@@ -25,7 +33,9 @@ STATUS_COLORS = {
 def read_summary() -> dict[str, dict[str, str]]:
     path = PRODUCT_DIR / "product_audit_summary.csv"
     with path.open(newline="", encoding="utf-8") as handle:
-        return {row["date"]: row for row in csv.DictReader(handle)}
+        rows = {row["date"]: row for row in csv.DictReader(handle)}
+    rows.update({date: value for date, value in EXTRA_SUMMARY.items() if date not in rows})
+    return rows
 
 
 def read_temporal() -> dict[str, dict[str, str]]:
@@ -145,11 +155,13 @@ def build_daily_print(date: str, summary: dict[str, str], temporal: dict[str, st
     draw_legend(page, 1115, 245)
 
     strip_y = 1618
+    preview_title = "Vigour preview" if np.any(preview > 0) else "Vigour preview unavailable"
+    human_title = "Human annotations" if date != "2026-06-04" else "Concern polygons"
     thumbs = [
         thumbnail(raw, "Raw NDVI"),
-        thumbnail(human, "Human annotations"),
+        thumbnail(human, human_title),
         thumbnail(overlay_density(raw, density, 0.45), "Concern density"),
-        thumbnail(preview, "Vigour zone preview"),
+        thumbnail(preview, preview_title),
     ]
     x = 70
     for thumb in thumbs:

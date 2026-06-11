@@ -17,7 +17,8 @@ const DATES = [
     "persistentConcern": "0.0",
     "recovered": "0.0",
     "status": "Expanding",
-    "statusNote": "Concern area increased since previous flight."
+    "statusNote": "Concern area increased since previous flight.",
+    "annotationNote": ""
   },
   {
     "date": "2026-05-12",
@@ -37,7 +38,8 @@ const DATES = [
     "persistentConcern": "6.875",
     "recovered": "3.656",
     "status": "Monitor",
-    "statusNote": "Monitor concern areas on next flight."
+    "statusNote": "Monitor concern areas on next flight.",
+    "annotationNote": ""
   },
   {
     "date": "2026-05-18",
@@ -57,7 +59,8 @@ const DATES = [
     "persistentConcern": "10.117",
     "recovered": "1.632",
     "status": "Monitor",
-    "statusNote": "Monitor concern areas on next flight."
+    "statusNote": "Monitor concern areas on next flight.",
+    "annotationNote": ""
   },
   {
     "date": "2026-05-22",
@@ -77,7 +80,8 @@ const DATES = [
     "persistentConcern": "11.273",
     "recovered": "1.978",
     "status": "Stable",
-    "statusNote": "Concern footprint is stable relative to previous flight."
+    "statusNote": "Concern footprint is stable relative to previous flight.",
+    "annotationNote": ""
   },
   {
     "date": "2026-05-27",
@@ -97,7 +101,8 @@ const DATES = [
     "persistentConcern": "11.641",
     "recovered": "1.411",
     "status": "Monitor",
-    "statusNote": "Monitor concern areas on next flight."
+    "statusNote": "Monitor concern areas on next flight.",
+    "annotationNote": ""
   },
   {
     "date": "2026-05-29",
@@ -117,7 +122,29 @@ const DATES = [
     "persistentConcern": "13.039",
     "recovered": "4.907",
     "status": "Review",
-    "statusNote": "Concern expanded sharply since previous flight."
+    "statusNote": "Concern expanded sharply since previous flight.",
+    "annotationNote": ""
+  },
+  {
+    "date": "2026-06-04",
+    "growthStage": "Late harvest / post-harvest review",
+    "source": "Mallard-Avenue-6-4-2026-orthophoto-NDVI.png",
+    "raw": "assets/2026-06-04/raw.png",
+    "human": "assets/2026-06-04/human_annotation_overlay.png",
+    "density": "assets/2026-06-04/concern_density.png",
+    "preview": "assets/2026-06-04/vigour_zone_preview.png",
+    "uncertainty": "assets/2026-06-04/uncertainty.png",
+    "newConcernLayer": "assets/2026-06-04/new_concern.png",
+    "persistentConcernLayer": "assets/2026-06-04/persistent_concern.png",
+    "recoveredLayer": "assets/2026-06-04/recovered_area.png",
+    "print": "assets/2026-06-04/print.png",
+    "percentFieldAffected": "40.095",
+    "newConcern": "20.349",
+    "persistentConcern": "19.746",
+    "recovered": "6.319",
+    "status": "Review",
+    "statusNote": "Concern expanded sharply since previous flight.",
+    "annotationNote": "Concern polygons only; no low/medium/high vigour annotation source available."
   }
 ];
 
@@ -217,6 +244,7 @@ function render() {
   el("statusBadge").textContent = entry.status || "Monitor";
   el("statusBadge").className = `status-badge ${String(entry.status || "Monitor").toLowerCase()}`;
   el("statusNote").textContent = entry.date === "2026-05-29" ? "Concern expanded sharply since previous flight." : (entry.statusNote || "");
+  el("annotationNote").textContent = entry.annotationNote || "";
   el("temporalMetrics").innerHTML = `
     <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
     <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>

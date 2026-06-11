@@ -21,7 +21,15 @@ PRODUCT_DIR = ROOT / "human_anchored_vigour_zone_preview_product"
 PRINT_DIR = ROOT / "daily_outputs"
 VIEWER_DIR = ROOT / "web_viewer"
 ASSETS_DIR = VIEWER_DIR / "assets"
-DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29"]
+DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29", "2026-06-04"]
+EXTRA_SUMMARY = {
+    "2026-06-04": {
+        "raw_path": r"C:\Users\Chimera\Downloads\Strawberry 1\Mallard-Avenue-6-4-2026-orthophoto-NDVI.png",
+        "annotated_path": "",
+        "polygon_path": r"C:\Users\Chimera\Downloads\strawberry1-annotation-polygon\Mallard-Avenue-6-4-2026-orthophoto-NDVI-polygon.png",
+        "status": "REVIEW",
+    }
+}
 
 COLORS_BGR = {
     "low_vigour": (35, 35, 235),
@@ -33,7 +41,9 @@ COLORS_BGR = {
 def read_summary() -> dict[str, dict[str, str]]:
     path = PRODUCT_DIR / "product_audit_summary.csv"
     with path.open(newline="", encoding="utf-8") as handle:
-        return {row["date"]: row for row in csv.DictReader(handle)}
+        rows = {row["date"]: row for row in csv.DictReader(handle)}
+    rows.update({date: value for date, value in EXTRA_SUMMARY.items() if date not in rows})
+    return rows
 
 
 def read_temporal_analytics() -> dict[str, dict[str, str]]:
@@ -71,6 +81,8 @@ def write_png(path: Path, image: np.ndarray) -> None:
 
 
 def human_annotation_overlay(raw_bgr: np.ndarray, annotated_path: str) -> np.ndarray:
+    if not annotated_path or not Path(annotated_path).exists():
+        return np.zeros((*raw_bgr.shape[:2], 4), dtype=np.uint8)
     annotated = load(annotated_path)
     annotated, _ = resize_annotated_to_raw(raw_bgr, annotated)
     annotation_mask = get_annotation_mask(raw_bgr, annotated)
@@ -135,7 +147,11 @@ def build_assets() -> list[dict[str, str]]:
         uncertainty = cv2.resize(load(date_dir / "concern_uncertainty_panel.png"), (raw.shape[1], raw.shape[0]), interpolation=cv2.INTER_AREA)
 
         write_png(out_dir / "raw.png", raw)
-        write_png(out_dir / "human_annotation_overlay.png", human_annotation_overlay(raw, row["annotated_path"]))
+        human_layer = human_annotation_overlay(raw, row.get("annotated_path", ""))
+        if not np.any(human_layer[:, :, 3]):
+            concern_reference = cv2.resize(load(date_dir / "seed_polygons.png"), (raw.shape[1], raw.shape[0]), interpolation=cv2.INTER_NEAREST)
+            human_layer = rgba_from_layer(concern_reference, np.any(concern_reference > 0, axis=2), 225)
+        write_png(out_dir / "human_annotation_overlay.png", human_layer)
         write_png(out_dir / "concern_density.png", concern_density_overlay(seed))
         write_png(out_dir / "vigour_zone_preview.png", preview_overlay(preview))
         write_png(out_dir / "uncertainty.png", uncertainty_overlay(uncertainty))
@@ -163,6 +179,7 @@ def build_assets() -> list[dict[str, str]]:
                 "recovered": temporal_row.get("recovered_percent_field", ""),
                 "status": temporal_row.get("status", "Monitor"),
                 "statusNote": temporal_row.get("status_note", ""),
+                "annotationNote": "Concern polygons only; no low/medium/high vigour annotation source available." if not row.get("annotated_path") else "",
             }
         )
     return rows
@@ -208,6 +225,7 @@ def write_viewer(rows: list[dict[str, str]]) -> None:
     <p>Ground check required.</p>
     <div id="statusBadge" class="status-badge">Monitor</div>
     <p id="statusNote" class="status-note"></p>
+    <p id="annotationNote" class="annotation-note"></p>
     <div id="temporalMetrics" class="metrics"></div>
     <figure class="chart">
       <img src="assets/temporal_timeline_chart.png" alt="Temporal concern area chart">
@@ -377,6 +395,7 @@ function render() {
   el("statusBadge").textContent = entry.status || "Monitor";
   el("statusBadge").className = `status-badge ${String(entry.status || "Monitor").toLowerCase()}`;
   el("statusNote").textContent = entry.date === "2026-05-29" ? "Concern expanded sharply since previous flight." : (entry.statusNote || "");
+  el("annotationNote").textContent = entry.annotationNote || "";
   el("temporalMetrics").innerHTML = `
     <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
     <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>
@@ -480,6 +499,11 @@ input[type="range"] { width: 100%; }
 .status-badge.review { background: #9a1f26; }
 .status-note {
   color: #f0c36a !important;
+  line-height: 1.35;
+}
+.annotation-note {
+  color: #f0c36a !important;
+  font-size: 12px;
   line-height: 1.35;
 }
 .metrics {

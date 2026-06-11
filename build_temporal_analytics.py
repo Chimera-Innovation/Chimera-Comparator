@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent
 PRODUCT_DIR = ROOT / "human_anchored_vigour_zone_preview_product"
 DAILY_DIR = ROOT / "daily_outputs"
 WEB_ASSETS_DIR = ROOT / "web_viewer" / "assets"
-DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29"]
+DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29", "2026-06-04"]
 TEMPORAL_COLORS = {
     "new": (35, 35, 235),
     "persistent": (0, 170, 255),
