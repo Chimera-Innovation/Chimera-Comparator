@@ -36,6 +36,14 @@ def read_summary() -> dict[str, dict[str, str]]:
         return {row["date"]: row for row in csv.DictReader(handle)}
 
 
+def read_temporal_analytics() -> dict[str, dict[str, str]]:
+    path = ROOT / "temporal_analytics.csv"
+    if not path.exists():
+        return {}
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {row["date"]: row for row in csv.DictReader(handle)}
+
+
 def load(path: Path | str) -> np.ndarray:
     image = cv2.imread(str(path), cv2.IMREAD_COLOR)
     if image is None:
@@ -105,9 +113,11 @@ def uncertainty_overlay(uncertainty: np.ndarray) -> np.ndarray:
 
 def build_assets() -> list[dict[str, str]]:
     summary = read_summary()
+    temporal = read_temporal_analytics()
     rows: list[dict[str, str]] = []
     for date in DATES:
         row = summary[date]
+        temporal_row = temporal.get(date, {})
         date_dir = PRODUCT_DIR / date
         out_dir = ASSETS_DIR / date
         raw = resize_to_width(load(date_dir / "raw_ndvi.png"))
@@ -132,6 +142,10 @@ def build_assets() -> list[dict[str, str]]:
                 "preview": f"assets/{date}/vigour_zone_preview.png",
                 "uncertainty": f"assets/{date}/uncertainty.png",
                 "print": f"assets/{date}/print.png",
+                "percentFieldAffected": temporal_row.get("percent_field_affected", ""),
+                "newConcern": temporal_row.get("new_concern_percent_field", ""),
+                "persistentConcern": temporal_row.get("persistent_concern_percent_field", ""),
+                "recovered": temporal_row.get("recovered_percent_field", ""),
             }
         )
     return rows
@@ -172,6 +186,11 @@ def write_viewer(rows: list[dict[str, str]]) -> None:
     <p>Inspect marked concern areas.</p>
     <p>Compare with previous date.</p>
     <p>Ground check required.</p>
+    <div id="temporalMetrics" class="metrics"></div>
+    <figure class="chart">
+      <img src="assets/temporal_timeline_chart.png" alt="Temporal concern area chart">
+      <figcaption>Concern area history</figcaption>
+    </figure>
     <div class="notice">Vigour Zone Preview is exploratory. Not validated automatic classification.</div>
     <button id="prevBtn">Previous</button>
     <button id="nextBtn">Next date</button>
@@ -194,6 +213,8 @@ def write_product_audit(rows: list[dict[str, str]]) -> None:
         date = row["date"]
         required = [
             ROOT / "daily_outputs" / f"{date}_print.png",
+            ROOT / "temporal_analytics.csv",
+            ASSETS_DIR / "temporal_timeline_chart.png",
             ASSETS_DIR / date / "raw.png",
             ASSETS_DIR / date / "human_annotation_overlay.png",
             ASSETS_DIR / date / "concern_density.png",
@@ -207,6 +228,8 @@ def write_product_audit(rows: list[dict[str, str]]) -> None:
                 "growth_stage": row["growthStage"],
                 "print_output_exists": str((ROOT / "daily_outputs" / f"{date}_print.png").exists()),
                 "viewer_assets_exist": str(all(path.exists() for path in required)),
+                "temporal_analytics_exists": str((ROOT / "temporal_analytics.csv").exists()),
+                "timeline_chart_exists": str((ASSETS_DIR / "temporal_timeline_chart.png").exists()),
                 "default_layers": "Raw NDVI + Human Annotation",
                 "status": "PASS" if all(path.exists() for path in required) else "REVIEW",
                 "note": "Human-Anchored Vigour Review; scouting prioritization only.",
@@ -220,6 +243,8 @@ def write_product_audit(rows: list[dict[str, str]]) -> None:
                 "growth_stage",
                 "print_output_exists",
                 "viewer_assets_exist",
+                "temporal_analytics_exists",
+                "timeline_chart_exists",
                 "default_layers",
                 "status",
                 "note",
@@ -317,6 +342,12 @@ function render() {
   el("densityLayer").src = entry.density;
   el("previewLayer").src = entry.preview;
   el("uncertaintyLayer").src = entry.uncertainty;
+  el("temporalMetrics").innerHTML = `
+    <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
+    <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>
+    <div><strong>${entry.persistentConcern || "0"}%</strong><span>persistent</span></div>
+    <div><strong>${entry.recovered || "0"}%</strong><span>recovered</span></div>
+  `;
   document.querySelectorAll(".thumb").forEach((thumb, index) => thumb.classList.toggle("active", index === currentIndex));
   applyLayerState();
 }
@@ -398,6 +429,38 @@ input[type="range"] { width: 100%; }
 }
 .overlay { pointer-events: none; }
 .right-panel p { margin: 0 0 10px; color: #d5dde7; }
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+.metrics div {
+  padding: 9px;
+  background: #0d141d;
+  border: 1px solid #2d3b4d;
+}
+.metrics strong {
+  display: block;
+  font-size: 20px;
+}
+.metrics span {
+  color: #aeb9c7;
+  font-size: 12px;
+}
+.chart {
+  margin: 14px 0;
+}
+.chart img {
+  width: 100%;
+  display: block;
+  background: white;
+}
+.chart figcaption {
+  margin-top: 5px;
+  color: #aeb9c7;
+  font-size: 12px;
+}
 .notice {
   margin: 18px 0;
   padding: 12px;

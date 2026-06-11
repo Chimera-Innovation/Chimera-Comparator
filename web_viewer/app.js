@@ -8,7 +8,11 @@ const DATES = [
     "density": "assets/2026-05-08/concern_density.png",
     "preview": "assets/2026-05-08/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-08/uncertainty.png",
-    "print": "assets/2026-05-08/print.png"
+    "print": "assets/2026-05-08/print.png",
+    "percentFieldAffected": "11.817",
+    "newConcern": "11.817",
+    "persistentConcern": "0.0",
+    "recovered": "0.0"
   },
   {
     "date": "2026-05-12",
@@ -19,7 +23,11 @@ const DATES = [
     "density": "assets/2026-05-12/concern_density.png",
     "preview": "assets/2026-05-12/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-12/uncertainty.png",
-    "print": "assets/2026-05-12/print.png"
+    "print": "assets/2026-05-12/print.png",
+    "percentFieldAffected": "11.758",
+    "newConcern": "4.883",
+    "persistentConcern": "6.875",
+    "recovered": "3.656"
   },
   {
     "date": "2026-05-18",
@@ -30,7 +38,11 @@ const DATES = [
     "density": "assets/2026-05-18/concern_density.png",
     "preview": "assets/2026-05-18/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-18/uncertainty.png",
-    "print": "assets/2026-05-18/print.png"
+    "print": "assets/2026-05-18/print.png",
+    "percentFieldAffected": "13.27",
+    "newConcern": "3.153",
+    "persistentConcern": "10.117",
+    "recovered": "1.632"
   },
   {
     "date": "2026-05-22",
@@ -41,7 +53,11 @@ const DATES = [
     "density": "assets/2026-05-22/concern_density.png",
     "preview": "assets/2026-05-22/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-22/uncertainty.png",
-    "print": "assets/2026-05-22/print.png"
+    "print": "assets/2026-05-22/print.png",
+    "percentFieldAffected": "12.885",
+    "newConcern": "1.612",
+    "persistentConcern": "11.273",
+    "recovered": "1.978"
   },
   {
     "date": "2026-05-27",
@@ -52,7 +68,11 @@ const DATES = [
     "density": "assets/2026-05-27/concern_density.png",
     "preview": "assets/2026-05-27/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-27/uncertainty.png",
-    "print": "assets/2026-05-27/print.png"
+    "print": "assets/2026-05-27/print.png",
+    "percentFieldAffected": "17.735",
+    "newConcern": "6.094",
+    "persistentConcern": "11.641",
+    "recovered": "1.411"
   },
   {
     "date": "2026-05-29",
@@ -63,7 +83,11 @@ const DATES = [
     "density": "assets/2026-05-29/concern_density.png",
     "preview": "assets/2026-05-29/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-29/uncertainty.png",
-    "print": "assets/2026-05-29/print.png"
+    "print": "assets/2026-05-29/print.png",
+    "percentFieldAffected": "26.835",
+    "newConcern": "13.796",
+    "persistentConcern": "13.039",
+    "recovered": "4.907"
   }
 ];
 
@@ -154,6 +178,12 @@ function render() {
   el("densityLayer").src = entry.density;
   el("previewLayer").src = entry.preview;
   el("uncertaintyLayer").src = entry.uncertainty;
+  el("temporalMetrics").innerHTML = `
+    <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
+    <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>
+    <div><strong>${entry.persistentConcern || "0"}%</strong><span>persistent</span></div>
+    <div><strong>${entry.recovered || "0"}%</strong><span>recovered</span></div>
+  `;
   document.querySelectorAll(".thumb").forEach((thumb, index) => thumb.classList.toggle("active", index === currentIndex));
   applyLayerState();
 }

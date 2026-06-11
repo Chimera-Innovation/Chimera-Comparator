@@ -1,0 +1,7 @@
+date,growth_stage,field_pixels,total_concern_area_pixels,percent_field_affected,new_concern_area_pixels,new_concern_percent_field,persistent_concern_area_pixels,persistent_concern_percent_field,recovered_area_pixels,recovered_percent_field,comparison_note
+2026-05-08,Bloom / early fruit set,8385238,990873,11.817,990873,11.817,0,0.0,0,0.0,First flight baseline
+2026-05-12,Bloom to fruit set,5690752,669120,11.758,277904,4.883,391216,6.875,208078,3.656,Compared with previous matched flight
+2026-05-18,Green fruit development,5420285,719280,13.27,170908,3.153,548372,10.117,88481,1.632,Compared with previous matched flight
+2026-05-22,Fruit sizing / early ripening,5448992,702101,12.885,87838,1.612,614263,11.273,107783,1.978,Compared with previous matched flight
+2026-05-27,Ripening / early harvest window,5230060,927550,17.735,318704,6.094,608846,11.641,73784,1.411,Compared with previous matched flight
+2026-05-29,Harvest-time ripening,5455559,1464002,26.835,752660,13.796,711342,13.039,267704,4.907,Compared with previous matched flight

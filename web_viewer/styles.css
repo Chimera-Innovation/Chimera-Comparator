@@ -61,6 +61,38 @@ input[type="range"] { width: 100%; }
 }
 .overlay { pointer-events: none; }
 .right-panel p { margin: 0 0 10px; color: #d5dde7; }
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+.metrics div {
+  padding: 9px;
+  background: #0d141d;
+  border: 1px solid #2d3b4d;
+}
+.metrics strong {
+  display: block;
+  font-size: 20px;
+}
+.metrics span {
+  color: #aeb9c7;
+  font-size: 12px;
+}
+.chart {
+  margin: 14px 0;
+}
+.chart img {
+  width: 100%;
+  display: block;
+  background: white;
+}
+.chart figcaption {
+  margin-top: 5px;
+  color: #aeb9c7;
+  font-size: 12px;
+}
 .notice {
   margin: 18px 0;
   padding: 12px;
