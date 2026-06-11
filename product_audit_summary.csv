@@ -1,0 +1,7 @@
+date,growth_stage,print_output_exists,viewer_assets_exist,default_layers,status,note
+2026-05-08,Bloom / early fruit set,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.
+2026-05-12,Bloom to fruit set,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.
+2026-05-18,Green fruit development,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.
+2026-05-22,Fruit sizing / early ripening,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.
+2026-05-27,Ripening / early harvest window,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.
+2026-05-29,Harvest-time ripening,True,True,Raw NDVI + Human Annotation,PASS,Human-Anchored Vigour Review; scouting prioritization only.

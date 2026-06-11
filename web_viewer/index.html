@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Strawberry 1 | Human-Anchored Vigour Review</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Strawberry 1</div>
+    <label>Date <select id="dateSelect"></select></label>
+    <div id="growthStage" class="stage"></div>
+  </header>
+  <aside class="left-panel">
+    <h2>Layers</h2>
+    <div id="layerControls"></div>
+  </aside>
+  <main class="viewport">
+    <div id="mapFrame" class="map-frame">
+      <img id="rawLayer" class="map-layer" alt="Raw NDVI">
+      <img id="humanLayer" class="map-layer overlay" alt="Human Annotation">
+      <img id="densityLayer" class="map-layer overlay" alt="Concern Density">
+      <img id="previewLayer" class="map-layer overlay" alt="Vigour Zone Preview">
+      <img id="uncertaintyLayer" class="map-layer overlay" alt="Uncertainty">
+    </div>
+  </main>
+  <aside class="right-panel">
+    <h2>Quick scouting note</h2>
+    <p>Inspect marked concern areas.</p>
+    <p>Compare with previous date.</p>
+    <p>Ground check required.</p>
+    <div class="notice">Vigour Zone Preview is exploratory. Not validated automatic classification.</div>
+    <button id="prevBtn">Previous</button>
+    <button id="nextBtn">Next date</button>
+  </aside>
+  <footer class="timeline" id="timeline"></footer>
+  <script src="app.js"></script>
+</body>
+</html>
