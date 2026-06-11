@@ -2,6 +2,10 @@ from __future__ import annotations
 
 
 GROWTH_STAGE_BY_MM_DD = {
+    "04-20": "Vegetative establishment / pre-bloom",
+    "04-24": "Pre-bloom canopy expansion",
+    "04-29": "Early bloom onset",
+    "05-01": "Early bloom",
     "05-08": "Bloom / early fruit set",
     "05-12": "Bloom to fruit set",
     "05-18": "Green fruit development",
@@ -12,6 +16,10 @@ GROWTH_STAGE_BY_MM_DD = {
 
 
 GROWTH_STAGE_NOTES = {
+    "Vegetative establishment / pre-bloom": "Early canopy differences are stage-sensitive and should be read as establishment variability, not harvest-time vigour.",
+    "Pre-bloom canopy expansion": "Canopy expansion is still uneven; concern-region percentages should be compared only with nearby pre-bloom dates.",
+    "Early bloom onset": "Bloom is beginning; vigour mix is transitional and should not be trended directly against fruit-sizing or ripening dates.",
+    "Early bloom": "Early bloom marks active canopy and flower development; interpret low and medium areas as scouting prompts, not final yield classes.",
     "Bloom / early fruit set": "Early season marks flag establishment and early resource-limitation areas for scouting.",
     "Bloom to fruit set": "Flowering and early fruit set are active; red low-vigour zones should be checked first.",
     "Green fruit development": "Canopy and fruit demand are rising; persistent low and medium zones become more operationally important.",
