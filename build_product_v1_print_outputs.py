@@ -14,10 +14,24 @@ PRODUCT_DIR = ROOT / "human_anchored_vigour_zone_preview_product"
 OUTPUT_DIR = ROOT / "daily_outputs"
 FIELD_NAME = "Strawberry 1"
 DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29"]
+STATUS_COLORS = {
+    "Stable": (70, 160, 85),
+    "Monitor": (0, 170, 255),
+    "Expanding": (40, 115, 230),
+    "Review": (35, 35, 210),
+}
 
 
 def read_summary() -> dict[str, dict[str, str]]:
     path = PRODUCT_DIR / "product_audit_summary.csv"
+    with path.open(newline="", encoding="utf-8") as handle:
+        return {row["date"]: row for row in csv.DictReader(handle)}
+
+
+def read_temporal() -> dict[str, dict[str, str]]:
+    path = ROOT / "temporal_analytics.csv"
+    if not path.exists():
+        return {}
     with path.open(newline="", encoding="utf-8") as handle:
         return {row["date"]: row for row in csv.DictReader(handle)}
 
@@ -91,13 +105,25 @@ def draw_legend(canvas: np.ndarray, x: int, y: int) -> None:
         yy += 28
 
 
-def build_daily_print(date: str, summary: dict[str, str]) -> Path:
+def draw_status_badge(canvas: np.ndarray, status: str, x: int, y: int) -> None:
+    color = STATUS_COLORS.get(status, (120, 120, 120))
+    cv2.rectangle(canvas, (x, y), (x + 220, y + 48), color, cv2.FILLED)
+    cv2.rectangle(canvas, (x, y), (x + 220, y + 48), (35, 39, 46), 1)
+    put_text(canvas, status.upper(), (x + 18, y + 32), 0.72, (255, 255, 255), 2)
+
+
+def build_daily_print(date: str, summary: dict[str, str], temporal: dict[str, str]) -> Path:
     date_dir = PRODUCT_DIR / date
     raw = load(date_dir / "raw_ndvi.png")
     human = load(date_dir / "human_annotation_outlines.png")
     seed = load(date_dir / "seed_polygons.png")
     preview = load(date_dir / "human_anchored_vigour_preview.png")
     uncertainty = load(date_dir / "concern_uncertainty_panel.png")
+    temporal_overlay = load(date_dir / "temporal_change_overlay.png")
+    if temporal_overlay.shape[2] == 4:
+        temporal_bgr = temporal_overlay[:, :, :3]
+    else:
+        temporal_bgr = temporal_overlay
     density = concern_density(seed, raw.shape)
 
     main_map = overlay_density(human, density)
@@ -110,6 +136,8 @@ def build_daily_print(date: str, summary: dict[str, str]) -> Path:
     put_text(page, growth_stage_for_date(date), (290, 118), 0.72, (58, 66, 76), 2)
     source_name = Path(summary["raw_path"]).name
     put_text(page, f"Source: {source_name}", (70, 160), 0.52, (91, 101, 113), 1)
+    status = temporal.get("status", "Monitor")
+    draw_status_badge(page, status, 1280, 58)
 
     map_x, map_y, map_w, map_h = 70, 205, 1460, 1370
     page[map_y : map_y + map_h, map_x : map_x + map_w] = fit(main_map, (map_w, map_h), (245, 247, 249))
@@ -133,8 +161,18 @@ def build_daily_print(date: str, summary: dict[str, str]) -> Path:
     cv2.rectangle(page, (70, note_y - 34), (1530, note_y + 42), (212, 218, 226), 1)
     put_text(page, "Use marked concern areas as scouting priorities. Ground inspection required.", (96, note_y + 10), 0.66, (35, 39, 46), 2)
 
-    put_text(page, "For scouting prioritization only. Not a disease diagnosis.", (70, 2120), 0.58, (91, 101, 113), 1)
-    put_text(page, "Vigour Zone Preview is exploratory. Not validated automatic classification.", (70, 2156), 0.5, (124, 132, 143), 1)
+    timeline = load(OUTPUT_DIR / "temporal_timeline_chart.png") if (OUTPUT_DIR / "temporal_timeline_chart.png").exists() else temporal_bgr
+    timeline_thumb = fit(timeline, (560, 150), (255, 255, 255))
+    page[2018 : 2018 + timeline_thumb.shape[0], 970 : 970 + timeline_thumb.shape[1]] = timeline_thumb
+    put_text(page, f"Status: {status}", (70, 2028), 0.58, STATUS_COLORS.get(status, (60, 60, 60)), 2)
+    put_text(page, f"New {temporal.get('new_concern_percent_field', '0')}% | Persistent {temporal.get('persistent_concern_percent_field', '0')}% | Recovered {temporal.get('recovered_percent_field', '0')}%", (70, 2060), 0.47, (67, 76, 88), 1)
+    status_note = temporal.get("status_note", "")
+    if date == "2026-05-29":
+        status_note = "Concern expanded sharply since previous flight."
+    put_text(page, status_note[:72], (70, 2090), 0.47, (67, 76, 88), 1)
+
+    put_text(page, "For scouting prioritization only. Not a disease diagnosis.", (70, 2168), 0.5, (91, 101, 113), 1)
+    put_text(page, "Appendix caveat: temporal change is image-space review of human concern polygons, not surveyed area.", (70, 2196), 0.42, (124, 132, 143), 1)
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUTPUT_DIR / f"{date}_print.png"
@@ -163,13 +201,14 @@ def build_contact_sheet(paths: list[Path]) -> Path:
 
 def main() -> None:
     summary = read_summary()
+    temporal = read_temporal()
     outputs = []
     audit_rows = []
     for date in DATES:
         if date not in summary:
             audit_rows.append({"date": date, "output": "", "status": "SKIPPED", "reason": "No matched product summary row"})
             continue
-        out = build_daily_print(date, summary[date])
+        out = build_daily_print(date, summary[date], temporal.get(date, {}))
         outputs.append(out)
         audit_rows.append({"date": date, "output": str(out), "status": "PASS", "reason": ""})
         print(f"[WRITE] {out}")

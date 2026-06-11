@@ -8,11 +8,16 @@ const DATES = [
     "density": "assets/2026-05-08/concern_density.png",
     "preview": "assets/2026-05-08/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-08/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-08/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-08/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-08/recovered_area.png",
     "print": "assets/2026-05-08/print.png",
     "percentFieldAffected": "11.817",
     "newConcern": "11.817",
     "persistentConcern": "0.0",
-    "recovered": "0.0"
+    "recovered": "0.0",
+    "status": "Expanding",
+    "statusNote": "Concern area increased since previous flight."
   },
   {
     "date": "2026-05-12",
@@ -23,11 +28,16 @@ const DATES = [
     "density": "assets/2026-05-12/concern_density.png",
     "preview": "assets/2026-05-12/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-12/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-12/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-12/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-12/recovered_area.png",
     "print": "assets/2026-05-12/print.png",
     "percentFieldAffected": "11.758",
     "newConcern": "4.883",
     "persistentConcern": "6.875",
-    "recovered": "3.656"
+    "recovered": "3.656",
+    "status": "Monitor",
+    "statusNote": "Monitor concern areas on next flight."
   },
   {
     "date": "2026-05-18",
@@ -38,11 +48,16 @@ const DATES = [
     "density": "assets/2026-05-18/concern_density.png",
     "preview": "assets/2026-05-18/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-18/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-18/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-18/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-18/recovered_area.png",
     "print": "assets/2026-05-18/print.png",
     "percentFieldAffected": "13.27",
     "newConcern": "3.153",
     "persistentConcern": "10.117",
-    "recovered": "1.632"
+    "recovered": "1.632",
+    "status": "Monitor",
+    "statusNote": "Monitor concern areas on next flight."
   },
   {
     "date": "2026-05-22",
@@ -53,11 +68,16 @@ const DATES = [
     "density": "assets/2026-05-22/concern_density.png",
     "preview": "assets/2026-05-22/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-22/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-22/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-22/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-22/recovered_area.png",
     "print": "assets/2026-05-22/print.png",
     "percentFieldAffected": "12.885",
     "newConcern": "1.612",
     "persistentConcern": "11.273",
-    "recovered": "1.978"
+    "recovered": "1.978",
+    "status": "Stable",
+    "statusNote": "Concern footprint is stable relative to previous flight."
   },
   {
     "date": "2026-05-27",
@@ -68,11 +88,16 @@ const DATES = [
     "density": "assets/2026-05-27/concern_density.png",
     "preview": "assets/2026-05-27/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-27/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-27/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-27/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-27/recovered_area.png",
     "print": "assets/2026-05-27/print.png",
     "percentFieldAffected": "17.735",
     "newConcern": "6.094",
     "persistentConcern": "11.641",
-    "recovered": "1.411"
+    "recovered": "1.411",
+    "status": "Monitor",
+    "statusNote": "Monitor concern areas on next flight."
   },
   {
     "date": "2026-05-29",
@@ -83,11 +108,16 @@ const DATES = [
     "density": "assets/2026-05-29/concern_density.png",
     "preview": "assets/2026-05-29/vigour_zone_preview.png",
     "uncertainty": "assets/2026-05-29/uncertainty.png",
+    "newConcernLayer": "assets/2026-05-29/new_concern.png",
+    "persistentConcernLayer": "assets/2026-05-29/persistent_concern.png",
+    "recoveredLayer": "assets/2026-05-29/recovered_area.png",
     "print": "assets/2026-05-29/print.png",
     "percentFieldAffected": "26.835",
     "newConcern": "13.796",
     "persistentConcern": "13.039",
-    "recovered": "4.907"
+    "recovered": "4.907",
+    "status": "Review",
+    "statusNote": "Concern expanded sharply since previous flight."
   }
 ];
 
@@ -97,6 +127,9 @@ const layers = [
   { id: "density", label: "Concern Density", element: "densityLayer", defaultOn: false, defaultOpacity: 0.65 },
   { id: "preview", label: "Vigour Zone Preview", element: "previewLayer", defaultOn: false, defaultOpacity: 0.8 },
   { id: "uncertainty", label: "Uncertainty", element: "uncertaintyLayer", defaultOn: false, defaultOpacity: 0.75 },
+  { id: "newConcernLayer", label: "New concern", element: "newConcernLayer", defaultOn: false, defaultOpacity: 0.8 },
+  { id: "persistentConcernLayer", label: "Persistent concern", element: "persistentConcernLayer", defaultOn: false, defaultOpacity: 0.75 },
+  { id: "recoveredLayer", label: "Recovered area", element: "recoveredLayer", defaultOn: false, defaultOpacity: 0.75 },
 ];
 
 let currentIndex = 0;
@@ -178,6 +211,12 @@ function render() {
   el("densityLayer").src = entry.density;
   el("previewLayer").src = entry.preview;
   el("uncertaintyLayer").src = entry.uncertainty;
+  el("newConcernLayer").src = entry.newConcernLayer;
+  el("persistentConcernLayer").src = entry.persistentConcernLayer;
+  el("recoveredLayer").src = entry.recoveredLayer;
+  el("statusBadge").textContent = entry.status || "Monitor";
+  el("statusBadge").className = `status-badge ${String(entry.status || "Monitor").toLowerCase()}`;
+  el("statusNote").textContent = entry.date === "2026-05-29" ? "Concern expanded sharply since previous flight." : (entry.statusNote || "");
   el("temporalMetrics").innerHTML = `
     <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
     <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>

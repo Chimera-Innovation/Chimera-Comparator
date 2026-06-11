@@ -105,6 +105,15 @@ def preview_overlay(preview: np.ndarray) -> np.ndarray:
     return rgba_from_layer(preview, active, 210)
 
 
+def resize_rgba(path: Path, size: tuple[int, int]) -> np.ndarray:
+    image = cv2.imread(str(path), cv2.IMREAD_UNCHANGED)
+    if image is None:
+        raise FileNotFoundError(path)
+    if image.shape[2] == 3:
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
+    return cv2.resize(image, size, interpolation=cv2.INTER_NEAREST)
+
+
 def uncertainty_overlay(uncertainty: np.ndarray) -> np.ndarray:
     hsv = cv2.cvtColor(uncertainty, cv2.COLOR_BGR2HSV)
     active = (hsv[:, :, 1] > 45) & (hsv[:, :, 2] > 60)
@@ -130,6 +139,9 @@ def build_assets() -> list[dict[str, str]]:
         write_png(out_dir / "concern_density.png", concern_density_overlay(seed))
         write_png(out_dir / "vigour_zone_preview.png", preview_overlay(preview))
         write_png(out_dir / "uncertainty.png", uncertainty_overlay(uncertainty))
+        write_png(out_dir / "new_concern.png", resize_rgba(date_dir / "new_concern_overlay.png", (raw.shape[1], raw.shape[0])))
+        write_png(out_dir / "persistent_concern.png", resize_rgba(date_dir / "persistent_concern_overlay.png", (raw.shape[1], raw.shape[0])))
+        write_png(out_dir / "recovered_area.png", resize_rgba(date_dir / "recovered_area_overlay.png", (raw.shape[1], raw.shape[0])))
         shutil.copyfile(PRINT_DIR / f"{date}_print.png", out_dir / "print.png")
         rows.append(
             {
@@ -141,11 +153,16 @@ def build_assets() -> list[dict[str, str]]:
                 "density": f"assets/{date}/concern_density.png",
                 "preview": f"assets/{date}/vigour_zone_preview.png",
                 "uncertainty": f"assets/{date}/uncertainty.png",
+                "newConcernLayer": f"assets/{date}/new_concern.png",
+                "persistentConcernLayer": f"assets/{date}/persistent_concern.png",
+                "recoveredLayer": f"assets/{date}/recovered_area.png",
                 "print": f"assets/{date}/print.png",
                 "percentFieldAffected": temporal_row.get("percent_field_affected", ""),
                 "newConcern": temporal_row.get("new_concern_percent_field", ""),
                 "persistentConcern": temporal_row.get("persistent_concern_percent_field", ""),
                 "recovered": temporal_row.get("recovered_percent_field", ""),
+                "status": temporal_row.get("status", "Monitor"),
+                "statusNote": temporal_row.get("status_note", ""),
             }
         )
     return rows
@@ -179,6 +196,9 @@ def write_viewer(rows: list[dict[str, str]]) -> None:
       <img id="densityLayer" class="map-layer overlay" alt="Concern Density">
       <img id="previewLayer" class="map-layer overlay" alt="Vigour Zone Preview">
       <img id="uncertaintyLayer" class="map-layer overlay" alt="Uncertainty">
+      <img id="newConcernLayer" class="map-layer overlay" alt="New Concern">
+      <img id="persistentConcernLayer" class="map-layer overlay" alt="Persistent Concern">
+      <img id="recoveredLayer" class="map-layer overlay" alt="Recovered Area">
     </div>
   </main>
   <aside class="right-panel">
@@ -186,12 +206,15 @@ def write_viewer(rows: list[dict[str, str]]) -> None:
     <p>Inspect marked concern areas.</p>
     <p>Compare with previous date.</p>
     <p>Ground check required.</p>
+    <div id="statusBadge" class="status-badge">Monitor</div>
+    <p id="statusNote" class="status-note"></p>
     <div id="temporalMetrics" class="metrics"></div>
     <figure class="chart">
       <img src="assets/temporal_timeline_chart.png" alt="Temporal concern area chart">
       <figcaption>Concern area history</figcaption>
     </figure>
     <div class="notice">Vigour Zone Preview is exploratory. Not validated automatic classification.</div>
+    <div class="notice appendix">Appendix caveat: temporal change is image-space review of human concern polygons, not surveyed area.</div>
     <button id="prevBtn">Previous</button>
     <button id="nextBtn">Next date</button>
   </aside>
@@ -220,6 +243,9 @@ def write_product_audit(rows: list[dict[str, str]]) -> None:
             ASSETS_DIR / date / "concern_density.png",
             ASSETS_DIR / date / "vigour_zone_preview.png",
             ASSETS_DIR / date / "uncertainty.png",
+            ASSETS_DIR / date / "new_concern.png",
+            ASSETS_DIR / date / "persistent_concern.png",
+            ASSETS_DIR / date / "recovered_area.png",
             ASSETS_DIR / date / "print.png",
         ]
         checks.append(
@@ -261,6 +287,9 @@ const layers = [
   { id: "density", label: "Concern Density", element: "densityLayer", defaultOn: false, defaultOpacity: 0.65 },
   { id: "preview", label: "Vigour Zone Preview", element: "previewLayer", defaultOn: false, defaultOpacity: 0.8 },
   { id: "uncertainty", label: "Uncertainty", element: "uncertaintyLayer", defaultOn: false, defaultOpacity: 0.75 },
+  { id: "newConcernLayer", label: "New concern", element: "newConcernLayer", defaultOn: false, defaultOpacity: 0.8 },
+  { id: "persistentConcernLayer", label: "Persistent concern", element: "persistentConcernLayer", defaultOn: false, defaultOpacity: 0.75 },
+  { id: "recoveredLayer", label: "Recovered area", element: "recoveredLayer", defaultOn: false, defaultOpacity: 0.75 },
 ];
 
 let currentIndex = 0;
@@ -342,6 +371,12 @@ function render() {
   el("densityLayer").src = entry.density;
   el("previewLayer").src = entry.preview;
   el("uncertaintyLayer").src = entry.uncertainty;
+  el("newConcernLayer").src = entry.newConcernLayer;
+  el("persistentConcernLayer").src = entry.persistentConcernLayer;
+  el("recoveredLayer").src = entry.recoveredLayer;
+  el("statusBadge").textContent = entry.status || "Monitor";
+  el("statusBadge").className = `status-badge ${String(entry.status || "Monitor").toLowerCase()}`;
+  el("statusNote").textContent = entry.date === "2026-05-29" ? "Concern expanded sharply since previous flight." : (entry.statusNote || "");
   el("temporalMetrics").innerHTML = `
     <div><strong>${entry.percentFieldAffected || "0"}%</strong><span>field affected</span></div>
     <div><strong>${entry.newConcern || "0"}%</strong><span>new</span></div>
@@ -429,6 +464,24 @@ input[type="range"] { width: 100%; }
 }
 .overlay { pointer-events: none; }
 .right-panel p { margin: 0 0 10px; color: #d5dde7; }
+.status-badge {
+  display: inline-block;
+  margin: 8px 0 6px;
+  padding: 8px 12px;
+  border: 1px solid #5a6575;
+  background: #223246;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.status-badge.stable { background: #2e7d44; }
+.status-badge.monitor { background: #a66c00; }
+.status-badge.expanding { background: #b94d28; }
+.status-badge.review { background: #9a1f26; }
+.status-note {
+  color: #f0c36a !important;
+  line-height: 1.35;
+}
 .metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -468,6 +521,9 @@ input[type="range"] { width: 100%; }
   border: 1px solid #38495c;
   color: #c5cfda;
   line-height: 1.35;
+}
+.appendix {
+  font-size: 12px;
 }
 button {
   background: #223246;

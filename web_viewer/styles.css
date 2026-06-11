@@ -61,6 +61,24 @@ input[type="range"] { width: 100%; }
 }
 .overlay { pointer-events: none; }
 .right-panel p { margin: 0 0 10px; color: #d5dde7; }
+.status-badge {
+  display: inline-block;
+  margin: 8px 0 6px;
+  padding: 8px 12px;
+  border: 1px solid #5a6575;
+  background: #223246;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.status-badge.stable { background: #2e7d44; }
+.status-badge.monitor { background: #a66c00; }
+.status-badge.expanding { background: #b94d28; }
+.status-badge.review { background: #9a1f26; }
+.status-note {
+  color: #f0c36a !important;
+  line-height: 1.35;
+}
 .metrics {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -100,6 +118,9 @@ input[type="range"] { width: 100%; }
   border: 1px solid #38495c;
   color: #c5cfda;
   line-height: 1.35;
+}
+.appendix {
+  font-size: 12px;
 }
 button {
   background: #223246;

@@ -23,6 +23,9 @@
       <img id="densityLayer" class="map-layer overlay" alt="Concern Density">
       <img id="previewLayer" class="map-layer overlay" alt="Vigour Zone Preview">
       <img id="uncertaintyLayer" class="map-layer overlay" alt="Uncertainty">
+      <img id="newConcernLayer" class="map-layer overlay" alt="New Concern">
+      <img id="persistentConcernLayer" class="map-layer overlay" alt="Persistent Concern">
+      <img id="recoveredLayer" class="map-layer overlay" alt="Recovered Area">
     </div>
   </main>
   <aside class="right-panel">
@@ -30,12 +33,15 @@
     <p>Inspect marked concern areas.</p>
     <p>Compare with previous date.</p>
     <p>Ground check required.</p>
+    <div id="statusBadge" class="status-badge">Monitor</div>
+    <p id="statusNote" class="status-note"></p>
     <div id="temporalMetrics" class="metrics"></div>
     <figure class="chart">
       <img src="assets/temporal_timeline_chart.png" alt="Temporal concern area chart">
       <figcaption>Concern area history</figcaption>
     </figure>
     <div class="notice">Vigour Zone Preview is exploratory. Not validated automatic classification.</div>
+    <div class="notice appendix">Appendix caveat: temporal change is image-space review of human concern polygons, not surveyed area.</div>
     <button id="prevBtn">Previous</button>
     <button id="nextBtn">Next date</button>
   </aside>

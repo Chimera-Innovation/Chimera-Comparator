@@ -14,6 +14,11 @@ PRODUCT_DIR = ROOT / "human_anchored_vigour_zone_preview_product"
 DAILY_DIR = ROOT / "daily_outputs"
 WEB_ASSETS_DIR = ROOT / "web_viewer" / "assets"
 DATES = ["2026-05-08", "2026-05-12", "2026-05-18", "2026-05-22", "2026-05-27", "2026-05-29"]
+TEMPORAL_COLORS = {
+    "new": (35, 35, 235),
+    "persistent": (0, 170, 255),
+    "recovered": (70, 180, 80),
+}
 
 
 def load(path: Path) -> np.ndarray:
@@ -42,6 +47,39 @@ def percent(value: int, denominator: int) -> float:
     return round(100.0 * value / max(1, denominator), 3)
 
 
+def status_for(new_percent: float, affected_percent: float) -> tuple[str, str]:
+    new_trigger = new_percent > 8.0
+    affected_trigger = affected_percent > 20.0
+    if new_trigger and affected_trigger:
+        return "Review", "Concern expanded sharply since previous flight."
+    if new_trigger or affected_trigger:
+        return "Expanding", "Concern area increased since previous flight."
+    if new_percent > 3.0 or affected_percent > 15.0:
+        return "Monitor", "Monitor concern areas on next flight."
+    return "Stable", "Concern footprint is stable relative to previous flight."
+
+
+def write_temporal_overlay(path: Path, shape: tuple[int, int], new_mask: np.ndarray, persistent_mask: np.ndarray, recovered_mask: np.ndarray) -> None:
+    layer = np.zeros((shape[0], shape[1], 3), dtype=np.uint8)
+    layer[persistent_mask] = TEMPORAL_COLORS["persistent"]
+    layer[recovered_mask] = TEMPORAL_COLORS["recovered"]
+    layer[new_mask] = TEMPORAL_COLORS["new"]
+    active = new_mask | persistent_mask | recovered_mask
+    rgba = cv2.cvtColor(layer, cv2.COLOR_BGR2BGRA)
+    rgba[:, :, 3] = np.where(active, 205, 0).astype(np.uint8)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(path), rgba)
+
+
+def write_single_mask_overlay(path: Path, shape: tuple[int, int], mask: np.ndarray, color: tuple[int, int, int]) -> None:
+    layer = np.zeros((shape[0], shape[1], 3), dtype=np.uint8)
+    layer[mask] = color
+    rgba = cv2.cvtColor(layer, cv2.COLOR_BGR2BGRA)
+    rgba[:, :, 3] = np.where(mask, 210, 0).astype(np.uint8)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    cv2.imwrite(str(path), rgba)
+
+
 def compute_rows() -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     previous: np.ndarray | None = None
@@ -65,6 +103,15 @@ def compute_rows() -> list[dict[str, object]]:
         new_mask = current_field & ~prev_aligned
         persistent_mask = current_field & prev_aligned
         recovered_mask = prev_aligned & ~current_field
+        new_percent = percent(int(np.count_nonzero(new_mask)), field_pixels)
+        affected_percent = percent(concern_pixels, field_pixels)
+        status, note = status_for(new_percent, affected_percent)
+
+        temporal_dir = PRODUCT_DIR / date
+        write_temporal_overlay(temporal_dir / "temporal_change_overlay.png", current.shape, new_mask, persistent_mask, recovered_mask)
+        write_single_mask_overlay(temporal_dir / "new_concern_overlay.png", current.shape, new_mask, TEMPORAL_COLORS["new"])
+        write_single_mask_overlay(temporal_dir / "persistent_concern_overlay.png", current.shape, persistent_mask, TEMPORAL_COLORS["persistent"])
+        write_single_mask_overlay(temporal_dir / "recovered_area_overlay.png", current.shape, recovered_mask, TEMPORAL_COLORS["recovered"])
 
         rows.append(
             {
@@ -72,13 +119,15 @@ def compute_rows() -> list[dict[str, object]]:
                 "growth_stage": growth_stage_for_date(date),
                 "field_pixels": field_pixels,
                 "total_concern_area_pixels": concern_pixels,
-                "percent_field_affected": percent(concern_pixels, field_pixels),
+                "percent_field_affected": affected_percent,
                 "new_concern_area_pixels": int(np.count_nonzero(new_mask)),
-                "new_concern_percent_field": percent(int(np.count_nonzero(new_mask)), field_pixels),
+                "new_concern_percent_field": new_percent,
                 "persistent_concern_area_pixels": int(np.count_nonzero(persistent_mask)),
                 "persistent_concern_percent_field": percent(int(np.count_nonzero(persistent_mask)), field_pixels),
                 "recovered_area_pixels": int(np.count_nonzero(recovered_mask)),
                 "recovered_percent_field": percent(int(np.count_nonzero(recovered_mask)), field_pixels),
+                "status": status,
+                "status_note": note,
                 "comparison_note": "First flight baseline" if previous is None else "Compared with previous matched flight",
             }
         )
@@ -106,7 +155,6 @@ def draw_timeline_chart(rows: list[dict[str, object]]) -> Path:
 
     max_val = max(
         1.0,
-        max(float(row["percent_field_affected"]) for row in rows),
         max(float(row["new_concern_percent_field"]) for row in rows),
         max(float(row["persistent_concern_percent_field"]) for row in rows),
         max(float(row["recovered_percent_field"]) for row in rows),
@@ -121,14 +169,13 @@ def draw_timeline_chart(rows: list[dict[str, object]]) -> Path:
     group_w = chart_w / n
     bar_w = int(group_w * 0.16)
     series = [
-        ("percent_field_affected", (75, 112, 190), "Total"),
         ("new_concern_percent_field", (35, 35, 235), "New"),
-        ("persistent_concern_percent_field", (60, 170, 90), "Persistent"),
-        ("recovered_percent_field", (215, 150, 40), "Recovered"),
+        ("persistent_concern_percent_field", (0, 170, 255), "Persistent"),
+        ("recovered_percent_field", (70, 180, 80), "Recovered"),
     ]
     for i, row in enumerate(rows):
         center = int(margin_l + group_w * (i + 0.5))
-        offsets = [-1.8, -0.6, 0.6, 1.8]
+        offsets = [-1.2, 0.0, 1.2]
         for (key, color, _label), offset in zip(series, offsets):
             value = float(row[key])
             x1 = int(center + offset * bar_w)
